@@ -1,0 +1,2744 @@
+{
+  "status": true,
+  "message": "shops fetched successfully",
+  "shops": [
+    {
+      "id": 453919,
+      "shopId": "a68c98dc-f784-4967-965b-9cf3877da9f8",
+      "companyShopId": "UA700101626",
+      "routeId": "UA7PSR15",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Shai Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "New delhi",
+      "geographicLocation": "28.62547, 77.099755",
+      "latitude": 28.62547,
+      "longitude": 77.099755,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|UA7PSR15|Shai Store|28.62547, 77.099755|UA700101626|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058062,
+          "routeId": "UA7PSR15",
+          "shopId": 453919,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453918,
+      "shopId": "49b37c7b-43c0-48a4-959b-7953c8d933a8",
+      "companyShopId": "W7L00100708",
+      "routeId": "W7LPSR14",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "K-AFE SOYA GRILL",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.616578, 77.033177",
+      "latitude": 28.616578,
+      "longitude": 77.033177,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR14|K-AFE SOYA GRILL|28.616578, 77.033177|W7L00100708|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058061,
+          "routeId": "W7LPSR14",
+          "shopId": 453918,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453917,
+      "shopId": "a15c5d05-5fa0-4e30-bd78-7b777da39b97",
+      "companyShopId": "W7L00100707",
+      "routeId": "W7LPSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Whee Consulting",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.584246, 77.071449",
+      "latitude": 28.584246,
+      "longitude": 77.071449,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR12|Whee Consulting|28.584246, 77.071449|W7L00100707|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058060,
+          "routeId": "W7LPSR12",
+          "shopId": 453917,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453916,
+      "shopId": "654ccc63-bb6b-4c71-8b4a-6d8d0ff99a6c",
+      "companyShopId": "W7L00100706",
+      "routeId": "W7LPSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Work  &  Thrive",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.583829, 77.071805",
+      "latitude": 28.583829,
+      "longitude": 77.071805,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR12|Work  &  Thrive|28.583829, 77.071805|W7L00100706|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058059,
+          "routeId": "W7LPSR12",
+          "shopId": 453916,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": true,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453915,
+      "shopId": "9b84a98a-ed3f-4059-aaad-900cce6b74b2",
+      "companyShopId": "W7L00100705",
+      "routeId": "W7LPSR9",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "UMANG COLD DRINK",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.623066, 77.061391",
+      "latitude": 28.623066,
+      "longitude": 77.061391,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR9|UMANG COLD DRINK|28.623066, 77.061391|W7L00100705|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058058,
+          "routeId": "W7LPSR9",
+          "shopId": 453915,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [
+        {
+          "id": 126795,
+          "adminId": 175,
+          "shopId": 453915,
+          "planogramId": 7,
+          "planogram": {
+            "id": 7,
+            "adminId": 6,
+            "coolerId": 2,
+            "organisationId": 4,
+            "name": "1 Door 4 Shelf Pl 1",
+            "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1762519207278_01_00_01_USER0_1762519206640_01JPG.jpg",
+            "metadata": {
+              "Cooler": {
+                "Door-1": {
+                  "data": [
+                    [2, 280],
+                    [633, 280],
+                    [633, 1951],
+                    [2, 1951]
+                  ],
+                  "Sections": [
+                    {
+                      "data": [
+                        [22, 344],
+                        [595, 344],
+                        [595, 672],
+                        [22, 672]
+                      ],
+                      "position": 1,
+                      "products": [
+                        {
+                          "product": "PEPSI_BLACK_300ML_CAN",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00123",
+                          "stackSize": 0,
+                          "Confidence": "22.0",
+                          "Bounding-Box": [
+                            [50, 475],
+                            [50, 669],
+                            [120, 669],
+                            [120, 475]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_300ML_CAN",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00126",
+                          "stackSize": 0,
+                          "Confidence": "27.0",
+                          "Bounding-Box": [
+                            [120, 472],
+                            [120, 670],
+                            [201, 670],
+                            [201, 472]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_300ML_RGP",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00150",
+                          "stackSize": 0,
+                          "Confidence": "28.0",
+                          "Bounding-Box": [
+                            [203, 385],
+                            [203, 667],
+                            [281, 667],
+                            [281, 385]
+                          ]
+                        },
+                        {
+                          "product": "TROP_SLICE_125ML_TETRA",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00177",
+                          "stackSize": 0,
+                          "Confidence": "36.0",
+                          "Bounding-Box": [
+                            [282, 503],
+                            [282, 671],
+                            [366, 671],
+                            [366, 503]
+                          ]
+                        },
+                        {
+                          "product": "CREAMBELL_KESAR_BADAM_180ML_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00049",
+                          "stackSize": 0,
+                          "Confidence": "6.0",
+                          "Bounding-Box": [
+                            [369, 463],
+                            [369, 669],
+                            [441, 669],
+                            [441, 463]
+                          ]
+                        },
+                        {
+                          "product": "TROP_ORANGE_1L_TETRA",
+                          "stacked": [],
+                          "Position": "6",
+                          "SKU-Code": "shelfscan_00226",
+                          "stackSize": 0,
+                          "Confidence": "33.0",
+                          "Bounding-Box": [
+                            [447, 378],
+                            [447, 669],
+                            [583, 669],
+                            [583, 378]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [22, 713],
+                        [599, 713],
+                        [599, 997],
+                        [22, 997]
+                      ],
+                      "position": 2,
+                      "products": [
+                        {
+                          "product": "STING_RED_250ML_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00180",
+                          "stackSize": 0,
+                          "Confidence": "31.0",
+                          "Bounding-Box": [
+                            [32, 778],
+                            [32, 998],
+                            [98, 998],
+                            [98, 778]
+                          ]
+                        },
+                        {
+                          "product": "STING_RED_250ML_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00180",
+                          "stackSize": 0,
+                          "Confidence": "31.0",
+                          "Bounding-Box": [
+                            [98, 777],
+                            [98, 998],
+                            [161, 998],
+                            [161, 777]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_400ML_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00139",
+                          "stackSize": 0,
+                          "Confidence": "29.0",
+                          "Bounding-Box": [
+                            [161, 774],
+                            [161, 994],
+                            [234, 994],
+                            [234, 774]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_400ML_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00110",
+                          "stackSize": 0,
+                          "Confidence": "19.0",
+                          "Bounding-Box": [
+                            [239, 766],
+                            [239, 992],
+                            [309, 992],
+                            [309, 766]
+                          ]
+                        },
+                        {
+                          "product": "MIRINDA_ORANGE_400ML_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00088",
+                          "stackSize": 0,
+                          "Confidence": "14.0",
+                          "Bounding-Box": [
+                            [311, 775],
+                            [311, 991],
+                            [369, 991],
+                            [369, 775]
+                          ]
+                        },
+                        {
+                          "product": "7UP_250ML_PET",
+                          "stacked": [],
+                          "Position": "6",
+                          "SKU-Code": "shelfscan_00009",
+                          "stackSize": 0,
+                          "Confidence": "2.0",
+                          "Bounding-Box": [
+                            [375, 774],
+                            [375, 997],
+                            [451, 997],
+                            [451, 774]
+                          ]
+                        },
+                        {
+                          "product": "TROP_SLICE_250ML_PET",
+                          "stacked": [],
+                          "Position": "7",
+                          "SKU-Code": "shelfscan_00158",
+                          "stackSize": 0,
+                          "Confidence": "37.0",
+                          "Bounding-Box": [
+                            [453, 773],
+                            [453, 996],
+                            [520, 996],
+                            [520, 773]
+                          ]
+                        },
+                        {
+                          "product": "GATORADE_BLUE_250ML_PET",
+                          "stacked": [],
+                          "Position": "8",
+                          "SKU-Code": "shelfscan_00058",
+                          "stackSize": 0,
+                          "Confidence": "8.0",
+                          "Bounding-Box": [
+                            [523, 773],
+                            [523, 994],
+                            [592, 994],
+                            [592, 773]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [20, 1041],
+                        [597, 1041],
+                        [597, 1358],
+                        [20, 1358]
+                      ],
+                      "position": 3,
+                      "products": [
+                        {
+                          "product": "PEPSI_BLACK_500ML_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00130",
+                          "stackSize": 0,
+                          "Confidence": "23.0",
+                          "Bounding-Box": [
+                            [88, 1071],
+                            [88, 1353],
+                            [165, 1353],
+                            [165, 1071]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_750ML_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00144",
+                          "stackSize": 0,
+                          "Confidence": "30.0",
+                          "Bounding-Box": [
+                            [175, 1071],
+                            [175, 1351],
+                            [259, 1351],
+                            [259, 1071]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_750ML_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00109",
+                          "stackSize": 0,
+                          "Confidence": "20.0",
+                          "Bounding-Box": [
+                            [265, 1065],
+                            [265, 1347],
+                            [361, 1347],
+                            [361, 1065]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_1.25L_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00132",
+                          "stackSize": 0,
+                          "Confidence": "24.0",
+                          "Bounding-Box": [
+                            [372, 1042],
+                            [372, 1351],
+                            [457, 1351],
+                            [457, 1042]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_1.25L_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00100",
+                          "stackSize": 0,
+                          "Confidence": "16.0",
+                          "Bounding-Box": [
+                            [468, 1047],
+                            [468, 1351],
+                            [552, 1351],
+                            [552, 1047]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [43, 1416],
+                        [597, 1416],
+                        [597, 1877],
+                        [43, 1877]
+                      ],
+                      "position": 4,
+                      "products": [
+                        {
+                          "product": "PEPSI_COLA_1.25L_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00132",
+                          "stackSize": 0,
+                          "Confidence": "24.0",
+                          "Bounding-Box": [
+                            [60, 1503],
+                            [60, 1872],
+                            [156, 1872],
+                            [156, 1503]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_2.25L_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00135",
+                          "stackSize": 0,
+                          "Confidence": "25.0",
+                          "Bounding-Box": [
+                            [164, 1421],
+                            [164, 1872],
+                            [300, 1872],
+                            [300, 1421]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_2.25L_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00102",
+                          "stackSize": 0,
+                          "Confidence": "17.0",
+                          "Bounding-Box": [
+                            [306, 1420],
+                            [306, 1875],
+                            [446, 1875],
+                            [446, 1420]
+                          ]
+                        },
+                        {
+                          "product": "MIRINDA_ORANGE_2.25L_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00083",
+                          "stackSize": 0,
+                          "Confidence": "13.0",
+                          "Bounding-Box": [
+                            [455, 1419],
+                            [455, 1874],
+                            [587, 1874],
+                            [587, 1419]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "Door-Visible": true
+                }
+              },
+              "dimensions": {
+                "width": 633,
+                "height": 1951
+              }
+            },
+            "products": [
+              {
+                "skuCode": "shelfscan_00123",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00126",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00150",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00177",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00049",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00226",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00180",
+                "plannedFacing": 2
+              },
+              {
+                "skuCode": "shelfscan_00139",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00110",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00088",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00009",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00158",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00058",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00130",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00144",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00109",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00132",
+                "plannedFacing": 2
+              },
+              {
+                "skuCode": "shelfscan_00100",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00135",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00103",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00083",
+                "plannedFacing": 1
+              }
+            ],
+            "status": "active",
+            "createdAt": "2025-10-15T12:54:46.116Z",
+            "updatedAt": "2025-10-15T12:54:46.116962",
+            "cooler": {
+              "id": 2,
+              "adminId": 6,
+              "organisationId": 4,
+              "name": "G-9",
+              "type": "UPRIGHT COOLER",
+              "owner": "own",
+              "internalWidth": "412",
+              "internalHeight": "1174",
+              "internalDepth": "400",
+              "externalWidth": "504",
+              "externalHeight": "1616",
+              "externalDepth": "552",
+              "noOfShelves": 4,
+              "noOfDoors": 1,
+              "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/dev/03/clientUploads/29_1759578144058_03_01_01_TROPADM_1759578143099_02PNG.png",
+              "ruleImage": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1760550678067_01_00_01_USER0_1760550676471_04PNG.png",
+              "layout": [
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "230",
+                  "shelfNo": 1,
+                  "allowedPackTypes": ["CAN"],
+                  "allowedPackCategories": ["CSD", "ENERGY"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "270",
+                  "shelfNo": 2,
+                  "allowedPackTypes": ["CAN", "PET_SMALL", "PET_500ML"],
+                  "allowedPackCategories": ["CSD", "JUICE", "ENERGY"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "300",
+                  "shelfNo": 3,
+                  "allowedPackTypes": ["PET_1L", "PET_1_25L"],
+                  "allowedPackCategories": ["CSD", "WATER", "JUICE"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "374",
+                  "shelfNo": 4,
+                  "allowedPackTypes": ["PET_1_5L", "PET_2L"],
+                  "allowedPackCategories": ["CSD", "WATER"]
+                }
+              ],
+              "status": "active",
+              "createdAt": "2025-10-06T21:44:54.393Z",
+              "updatedAt": "2025-10-06T21:44:54.393103"
+            }
+          }
+        }
+      ],
+      "coolers": [
+        {
+          "id": 132775,
+          "adminId": 175,
+          "shopId": 453915,
+          "coolerId": 2,
+          "cooler": {
+            "id": 2,
+            "adminId": 6,
+            "organisationId": 4,
+            "name": "G-9",
+            "type": "UPRIGHT COOLER",
+            "owner": "own",
+            "internalWidth": "412",
+            "internalHeight": "1174",
+            "internalDepth": "400",
+            "externalWidth": "504",
+            "externalHeight": "1616",
+            "externalDepth": "552",
+            "noOfShelves": 4,
+            "noOfDoors": 1,
+            "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/dev/03/clientUploads/29_1759578144058_03_01_01_TROPADM_1759578143099_02PNG.png",
+            "ruleImage": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1760550678067_01_00_01_USER0_1760550676471_04PNG.png",
+            "layout": [
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "230",
+                "shelfNo": 1,
+                "allowedPackTypes": ["CAN"],
+                "allowedPackCategories": ["CSD", "ENERGY"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "270",
+                "shelfNo": 2,
+                "allowedPackTypes": ["CAN", "PET_SMALL", "PET_500ML"],
+                "allowedPackCategories": ["CSD", "JUICE", "ENERGY"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "300",
+                "shelfNo": 3,
+                "allowedPackTypes": ["PET_1L", "PET_1_25L"],
+                "allowedPackCategories": ["CSD", "WATER", "JUICE"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "374",
+                "shelfNo": 4,
+                "allowedPackTypes": ["PET_1_5L", "PET_2L"],
+                "allowedPackCategories": ["CSD", "WATER"]
+              }
+            ],
+            "status": "active",
+            "createdAt": "2025-10-06T21:44:54.393Z",
+            "updatedAt": "2025-10-06T21:44:54.393103"
+          }
+        }
+      ]
+    },
+    {
+      "id": 453914,
+      "shopId": "62a37c37-33e1-4b1b-982e-07ea5537684b",
+      "companyShopId": "W7L00100704",
+      "routeId": "W7LPSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "OM sai sekhawat general Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.583818, 77.071860",
+      "latitude": 28.583818,
+      "longitude": 77.07186,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR12|OM sai sekhawat general Store|28.583818, 77.071860|W7L00100704|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058057,
+          "routeId": "W7LPSR12",
+          "shopId": 453914,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453913,
+      "shopId": "50538092-9bdb-4cf7-a61f-1c1aff430086",
+      "companyShopId": "W7L00100703",
+      "routeId": "W7LPSR3",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "KAMALA GENERAL STORE",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.588211, 77.085884",
+      "latitude": 28.588211,
+      "longitude": 77.085884,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR3|KAMALA GENERAL STORE|28.588211, 77.085884|W7L00100703|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058056,
+          "routeId": "W7LPSR3",
+          "shopId": 453913,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453912,
+      "shopId": "81e7176d-74c9-4d46-b430-7f2feb6717a3",
+      "companyShopId": "W7L00100702",
+      "routeId": "W7LPSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "CHAURASIA PAN PALACE",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.595887, 77.089823",
+      "latitude": 28.595887,
+      "longitude": 77.089823,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR12|CHAURASIA PAN PALACE|28.595887, 77.089823|W7L00100702|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058055,
+          "routeId": "W7LPSR12",
+          "shopId": 453912,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453911,
+      "shopId": "6b2651c3-6cf3-42b1-8e18-eb5f6df84bcc",
+      "companyShopId": "W7L00100701",
+      "routeId": "W7LPSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "KRISHNA SWEETS & SNACKS",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.587034, 77.070648",
+      "latitude": 28.587034,
+      "longitude": 77.070648,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR12|KRISHNA SWEETS & SNACKS|28.587034, 77.070648|W7L00100701|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058054,
+          "routeId": "W7LPSR12",
+          "shopId": 453911,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453910,
+      "shopId": "c161010c-1164-432e-b459-fb8d066b7e26",
+      "companyShopId": "W7L00100700",
+      "routeId": "W7LPSR3",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "SHYAM JI GENERAL STORE",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.593651, 77.082030",
+      "latitude": 28.593651,
+      "longitude": 77.08203,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR3|SHYAM JI GENERAL STORE|28.593651, 77.082030|W7L00100700|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058053,
+          "routeId": "W7LPSR3",
+          "shopId": 453910,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453909,
+      "shopId": "1cad685c-c06e-48b6-ad8c-91ce20aed992",
+      "companyShopId": "W7L00100699",
+      "routeId": "W7LPSR6",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "RIDHIMA GENRAL STORE",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.605696, 77.099867",
+      "latitude": 28.605696,
+      "longitude": 77.099867,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR6|RIDHIMA GENRAL STORE|28.605696, 77.099867|W7L00100699|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058052,
+          "routeId": "W7LPSR6",
+          "shopId": 453909,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453908,
+      "shopId": "f71a42b3-5f62-4ee2-8424-d34dccb345cb",
+      "companyShopId": "W7L00100698",
+      "routeId": "W7LPSR6",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "MAHI NAMKEEN STORE",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "NEW DELHI",
+      "geographicLocation": "28.604751, 77.098431",
+      "latitude": 28.604751,
+      "longitude": 77.098431,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W7LPSR6|MAHI NAMKEEN STORE|28.604751, 77.098431|W7L00100698|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058051,
+          "routeId": "W7LPSR6",
+          "shopId": 453908,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": false,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453907,
+      "shopId": "ca9cc0ee-7215-4bd2-91e1-237e2456208c",
+      "companyShopId": "UA700101625",
+      "routeId": "UA7PSR12",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "The Everest food court",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "New delhi",
+      "geographicLocation": "28.623972, 77.080732",
+      "latitude": 28.623972,
+      "longitude": 77.080732,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|UA7PSR12|The Everest food court|28.623972, 77.080732|UA700101625|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058050,
+          "routeId": "UA7PSR12",
+          "shopId": 453907,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453906,
+      "shopId": "6defed16-8beb-4f45-bc5e-75d2a57d0399",
+      "companyShopId": "QPL00100039",
+      "routeId": "QPLPSR9",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Nikhil Tea Stall",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "New delhi",
+      "geographicLocation": "28.607607, 77.048231",
+      "latitude": 28.607607,
+      "longitude": 77.048231,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|QPLPSR9|Nikhil Tea Stall|28.607607, 77.048231|QPL00100039|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058049,
+          "routeId": "QPLPSR9",
+          "shopId": 453906,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453905,
+      "shopId": "bd19f5ec-40e7-4e25-989d-b2a247a11933",
+      "companyShopId": "W6Q00100046",
+      "routeId": "W6QPSR17",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Madhav General Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.534189, 77.132004",
+      "latitude": 28.534189,
+      "longitude": 77.132004,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR17|Madhav General Store|28.534189, 77.132004|W6Q00100046|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058048,
+          "routeId": "W6QPSR17",
+          "shopId": 453905,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": true,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453904,
+      "shopId": "e2b0c01e-4f66-4d19-82be-1e0d2262bfda",
+      "companyShopId": "W6Q00100045",
+      "routeId": "W6QPSR17",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Mahesh Gen Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.533726, 77.130658",
+      "latitude": 28.533726,
+      "longitude": 77.130658,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR17|Mahesh Gen Store|28.533726, 77.130658|W6Q00100045|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058047,
+          "routeId": "W6QPSR17",
+          "shopId": 453904,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453903,
+      "shopId": "eff62da8-f330-4302-a885-8f4dff66c5af",
+      "companyShopId": "W6Q00100044",
+      "routeId": "W6QPSR17",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Anshu General Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.533567, 77.1329",
+      "latitude": 28.533567,
+      "longitude": 77.1329,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR17|Anshu General Store|28.533567, 77.1329|W6Q00100044|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058046,
+          "routeId": "W6QPSR17",
+          "shopId": 453903,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": true,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453902,
+      "shopId": "a181a23e-5a97-4eb8-a955-8393c3acc4e8",
+      "companyShopId": "W6Q00100043",
+      "routeId": "W6QPSR4",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Anamia Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.523002, 77.0747",
+      "latitude": 28.523002,
+      "longitude": 77.0747,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR4|Anamia Store|28.523002, 77.0747|W6Q00100043|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058045,
+          "routeId": "W6QPSR4",
+          "shopId": 453902,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453901,
+      "shopId": "715eb3ae-7859-48dc-a58e-06be15bee34a",
+      "companyShopId": "W6Q00100042",
+      "routeId": "W6QPSR22",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Anakpal General Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.548848, 77.12896",
+      "latitude": 28.548848,
+      "longitude": 77.12896,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR22|Anakpal General Store|28.548848, 77.12896|W6Q00100042|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058044,
+          "routeId": "W6QPSR22",
+          "shopId": 453901,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": true,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453900,
+      "shopId": "893b7b91-48f2-4d43-9b21-642219d535e0",
+      "companyShopId": "W6Q00100041",
+      "routeId": "W6QPSR22",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Shri Ganesh Puri Sabzi",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.544625, 77.123857",
+      "latitude": 28.544625,
+      "longitude": 77.123857,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR22|Shri Ganesh Puri Sabzi|28.544625, 77.123857|W6Q00100041|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058043,
+          "routeId": "W6QPSR22",
+          "shopId": 453900,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453899,
+      "shopId": "425ed954-dcaf-464a-ab48-bd3b587a3785",
+      "companyShopId": "W6Q00100040",
+      "routeId": "W6QPSR22",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "N. S Hotel",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.546234, 77.125655",
+      "latitude": 28.546234,
+      "longitude": 77.125655,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR22|N. S Hotel|28.546234, 77.125655|W6Q00100040|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058042,
+          "routeId": "W6QPSR22",
+          "shopId": 453899,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": true,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453898,
+      "shopId": "f70eb286-be00-4423-b9bd-64487fc9a991",
+      "companyShopId": "W6Q00100039",
+      "routeId": "W6QPSR5",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Desi Spicy Dhaba",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.537017, 77.11728",
+      "latitude": 28.537017,
+      "longitude": 77.11728,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR5|Desi Spicy Dhaba|28.537017, 77.11728|W6Q00100039|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058041,
+          "routeId": "W6QPSR5",
+          "shopId": 453898,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453897,
+      "shopId": "51712377-df55-4dbc-a7c8-b2582490142d",
+      "companyShopId": "W6Q00100038",
+      "routeId": "W6QPSR4",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Da Pizza Hub",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.521665, 77.07952",
+      "latitude": 28.521665,
+      "longitude": 77.07952,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR4|Da Pizza Hub|28.521665, 77.07952|W6Q00100038|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058040,
+          "routeId": "W6QPSR4",
+          "shopId": 453897,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453896,
+      "shopId": "6d60af9b-e879-4842-8ded-5e5807ba0484",
+      "companyShopId": "W6Q00100037",
+      "routeId": "W6QPSR4",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Kiran General Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.522408, 77.077672",
+      "latitude": 28.522408,
+      "longitude": 77.077672,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR4|Kiran General Store|28.522408, 77.077672|W6Q00100037|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058039,
+          "routeId": "W6QPSR4",
+          "shopId": 453896,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": false,
+          "tuesday": true,
+          "wednesday": false,
+          "thursday": true,
+          "friday": false,
+          "saturday": true,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [],
+      "coolers": []
+    },
+    {
+      "id": 453895,
+      "shopId": "aa5842df-1ff5-49a7-bb9c-fb7bd503c0af",
+      "companyShopId": "W6Q00100036",
+      "routeId": "W6QPSR21",
+      "adminId": 6,
+      "organisationId": 4,
+      "unitId": 1,
+      "storeName": "Manvi Store",
+      "storeImage": "https://storage.googleapis.com/shelfex-cdn/portal/own/images/store.jpg",
+      "storeAddress": null,
+      "cityName": "DELHI",
+      "geographicLocation": "28.532113, 77.126732",
+      "latitude": 28.532113,
+      "longitude": 77.126732,
+      "retailerName": null,
+      "segmentName": null,
+      "regionName": "DL",
+      "storeTypeName": null,
+      "createdAt": "2026-03-23T12:28:54.568Z",
+      "status": "active",
+      "updatedAt": "2026-03-23 12:28:54.568883",
+      "key": "4|W6QPSR21|Manvi Store|28.532113, 77.126732|W6Q00100036|active",
+      "unit": {
+        "id": 1,
+        "unitCode": "16",
+        "organisationId": 4,
+        "unitHeadId": 584,
+        "unitName": "DEL",
+        "PIPAccess": true,
+        "FullFrameDetection": true,
+        "VTIAccess": true,
+        "geofencing": "hard_alert",
+        "geofencingRadius": 100,
+        "createdAt": "2025-11-06T06:53:57.883Z",
+        "updatedAt": "2026-03-07T06:12:46.869252"
+      },
+      "scheduledVisits": [
+        {
+          "id": 1058038,
+          "routeId": "W6QPSR21",
+          "shopId": 453895,
+          "organisationId": 4,
+          "frequency": "weekly",
+          "monday": true,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": true,
+          "saturday": false,
+          "sunday": false,
+          "startDate": null,
+          "lastPerformedOn": null,
+          "nextDueDate": null,
+          "createdAt": "2026-03-23T12:28:56.454Z",
+          "updatedAt": "2026-03-23T12:28:56.454392"
+        }
+      ],
+      "planograms": [
+        {
+          "id": 121894,
+          "adminId": 63,
+          "shopId": 453895,
+          "planogramId": 7,
+          "planogram": {
+            "id": 7,
+            "adminId": 6,
+            "coolerId": 2,
+            "organisationId": 4,
+            "name": "1 Door 4 Shelf Pl 1",
+            "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1762519207278_01_00_01_USER0_1762519206640_01JPG.jpg",
+            "metadata": {
+              "Cooler": {
+                "Door-1": {
+                  "data": [
+                    [2, 280],
+                    [633, 280],
+                    [633, 1951],
+                    [2, 1951]
+                  ],
+                  "Sections": [
+                    {
+                      "data": [
+                        [22, 344],
+                        [595, 344],
+                        [595, 672],
+                        [22, 672]
+                      ],
+                      "position": 1,
+                      "products": [
+                        {
+                          "product": "PEPSI_BLACK_300ML_CAN",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00123",
+                          "stackSize": 0,
+                          "Confidence": "22.0",
+                          "Bounding-Box": [
+                            [50, 475],
+                            [50, 669],
+                            [120, 669],
+                            [120, 475]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_300ML_CAN",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00126",
+                          "stackSize": 0,
+                          "Confidence": "27.0",
+                          "Bounding-Box": [
+                            [120, 472],
+                            [120, 670],
+                            [201, 670],
+                            [201, 472]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_300ML_RGP",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00150",
+                          "stackSize": 0,
+                          "Confidence": "28.0",
+                          "Bounding-Box": [
+                            [203, 385],
+                            [203, 667],
+                            [281, 667],
+                            [281, 385]
+                          ]
+                        },
+                        {
+                          "product": "TROP_SLICE_125ML_TETRA",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00177",
+                          "stackSize": 0,
+                          "Confidence": "36.0",
+                          "Bounding-Box": [
+                            [282, 503],
+                            [282, 671],
+                            [366, 671],
+                            [366, 503]
+                          ]
+                        },
+                        {
+                          "product": "CREAMBELL_KESAR_BADAM_180ML_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00049",
+                          "stackSize": 0,
+                          "Confidence": "6.0",
+                          "Bounding-Box": [
+                            [369, 463],
+                            [369, 669],
+                            [441, 669],
+                            [441, 463]
+                          ]
+                        },
+                        {
+                          "product": "TROP_ORANGE_1L_TETRA",
+                          "stacked": [],
+                          "Position": "6",
+                          "SKU-Code": "shelfscan_00226",
+                          "stackSize": 0,
+                          "Confidence": "33.0",
+                          "Bounding-Box": [
+                            [447, 378],
+                            [447, 669],
+                            [583, 669],
+                            [583, 378]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [22, 713],
+                        [599, 713],
+                        [599, 997],
+                        [22, 997]
+                      ],
+                      "position": 2,
+                      "products": [
+                        {
+                          "product": "STING_RED_250ML_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00180",
+                          "stackSize": 0,
+                          "Confidence": "31.0",
+                          "Bounding-Box": [
+                            [32, 778],
+                            [32, 998],
+                            [98, 998],
+                            [98, 778]
+                          ]
+                        },
+                        {
+                          "product": "STING_RED_250ML_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00180",
+                          "stackSize": 0,
+                          "Confidence": "31.0",
+                          "Bounding-Box": [
+                            [98, 777],
+                            [98, 998],
+                            [161, 998],
+                            [161, 777]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_400ML_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00139",
+                          "stackSize": 0,
+                          "Confidence": "29.0",
+                          "Bounding-Box": [
+                            [161, 774],
+                            [161, 994],
+                            [234, 994],
+                            [234, 774]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_400ML_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00110",
+                          "stackSize": 0,
+                          "Confidence": "19.0",
+                          "Bounding-Box": [
+                            [239, 766],
+                            [239, 992],
+                            [309, 992],
+                            [309, 766]
+                          ]
+                        },
+                        {
+                          "product": "MIRINDA_ORANGE_400ML_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00088",
+                          "stackSize": 0,
+                          "Confidence": "14.0",
+                          "Bounding-Box": [
+                            [311, 775],
+                            [311, 991],
+                            [369, 991],
+                            [369, 775]
+                          ]
+                        },
+                        {
+                          "product": "7UP_250ML_PET",
+                          "stacked": [],
+                          "Position": "6",
+                          "SKU-Code": "shelfscan_00009",
+                          "stackSize": 0,
+                          "Confidence": "2.0",
+                          "Bounding-Box": [
+                            [375, 774],
+                            [375, 997],
+                            [451, 997],
+                            [451, 774]
+                          ]
+                        },
+                        {
+                          "product": "TROP_SLICE_250ML_PET",
+                          "stacked": [],
+                          "Position": "7",
+                          "SKU-Code": "shelfscan_00158",
+                          "stackSize": 0,
+                          "Confidence": "37.0",
+                          "Bounding-Box": [
+                            [453, 773],
+                            [453, 996],
+                            [520, 996],
+                            [520, 773]
+                          ]
+                        },
+                        {
+                          "product": "GATORADE_BLUE_250ML_PET",
+                          "stacked": [],
+                          "Position": "8",
+                          "SKU-Code": "shelfscan_00058",
+                          "stackSize": 0,
+                          "Confidence": "8.0",
+                          "Bounding-Box": [
+                            [523, 773],
+                            [523, 994],
+                            [592, 994],
+                            [592, 773]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [20, 1041],
+                        [597, 1041],
+                        [597, 1358],
+                        [20, 1358]
+                      ],
+                      "position": 3,
+                      "products": [
+                        {
+                          "product": "PEPSI_BLACK_500ML_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00130",
+                          "stackSize": 0,
+                          "Confidence": "23.0",
+                          "Bounding-Box": [
+                            [88, 1071],
+                            [88, 1353],
+                            [165, 1353],
+                            [165, 1071]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_750ML_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00144",
+                          "stackSize": 0,
+                          "Confidence": "30.0",
+                          "Bounding-Box": [
+                            [175, 1071],
+                            [175, 1351],
+                            [259, 1351],
+                            [259, 1071]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_750ML_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00109",
+                          "stackSize": 0,
+                          "Confidence": "20.0",
+                          "Bounding-Box": [
+                            [265, 1065],
+                            [265, 1347],
+                            [361, 1347],
+                            [361, 1065]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_1.25L_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00132",
+                          "stackSize": 0,
+                          "Confidence": "24.0",
+                          "Bounding-Box": [
+                            [372, 1042],
+                            [372, 1351],
+                            [457, 1351],
+                            [457, 1042]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_1.25L_PET",
+                          "stacked": [],
+                          "Position": "5",
+                          "SKU-Code": "shelfscan_00100",
+                          "stackSize": 0,
+                          "Confidence": "16.0",
+                          "Bounding-Box": [
+                            [468, 1047],
+                            [468, 1351],
+                            [552, 1351],
+                            [552, 1047]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "data": [
+                        [43, 1416],
+                        [597, 1416],
+                        [597, 1877],
+                        [43, 1877]
+                      ],
+                      "position": 4,
+                      "products": [
+                        {
+                          "product": "PEPSI_COLA_1.25L_PET",
+                          "stacked": [],
+                          "Position": "1",
+                          "SKU-Code": "shelfscan_00132",
+                          "stackSize": 0,
+                          "Confidence": "24.0",
+                          "Bounding-Box": [
+                            [60, 1503],
+                            [60, 1872],
+                            [156, 1872],
+                            [156, 1503]
+                          ]
+                        },
+                        {
+                          "product": "PEPSI_COLA_2.25L_PET",
+                          "stacked": [],
+                          "Position": "2",
+                          "SKU-Code": "shelfscan_00135",
+                          "stackSize": 0,
+                          "Confidence": "25.0",
+                          "Bounding-Box": [
+                            [164, 1421],
+                            [164, 1872],
+                            [300, 1872],
+                            [300, 1421]
+                          ]
+                        },
+                        {
+                          "product": "MOUNTAIN_DEW_2.25L_PET",
+                          "stacked": [],
+                          "Position": "3",
+                          "SKU-Code": "shelfscan_00102",
+                          "stackSize": 0,
+                          "Confidence": "17.0",
+                          "Bounding-Box": [
+                            [306, 1420],
+                            [306, 1875],
+                            [446, 1875],
+                            [446, 1420]
+                          ]
+                        },
+                        {
+                          "product": "MIRINDA_ORANGE_2.25L_PET",
+                          "stacked": [],
+                          "Position": "4",
+                          "SKU-Code": "shelfscan_00083",
+                          "stackSize": 0,
+                          "Confidence": "13.0",
+                          "Bounding-Box": [
+                            [455, 1419],
+                            [455, 1874],
+                            [587, 1874],
+                            [587, 1419]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "Door-Visible": true
+                }
+              },
+              "dimensions": {
+                "width": 633,
+                "height": 1951
+              }
+            },
+            "products": [
+              {
+                "skuCode": "shelfscan_00123",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00126",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00150",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00177",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00049",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00226",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00180",
+                "plannedFacing": 2
+              },
+              {
+                "skuCode": "shelfscan_00139",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00110",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00088",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00009",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00158",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00058",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00130",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00144",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00109",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00132",
+                "plannedFacing": 2
+              },
+              {
+                "skuCode": "shelfscan_00100",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00135",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00103",
+                "plannedFacing": 1
+              },
+              {
+                "skuCode": "shelfscan_00083",
+                "plannedFacing": 1
+              }
+            ],
+            "status": "active",
+            "createdAt": "2025-10-15T12:54:46.116Z",
+            "updatedAt": "2025-10-15T12:54:46.116962",
+            "cooler": {
+              "id": 2,
+              "adminId": 6,
+              "organisationId": 4,
+              "name": "G-9",
+              "type": "UPRIGHT COOLER",
+              "owner": "own",
+              "internalWidth": "412",
+              "internalHeight": "1174",
+              "internalDepth": "400",
+              "externalWidth": "504",
+              "externalHeight": "1616",
+              "externalDepth": "552",
+              "noOfShelves": 4,
+              "noOfDoors": 1,
+              "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/dev/03/clientUploads/29_1759578144058_03_01_01_TROPADM_1759578143099_02PNG.png",
+              "ruleImage": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1760550678067_01_00_01_USER0_1760550676471_04PNG.png",
+              "layout": [
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "230",
+                  "shelfNo": 1,
+                  "allowedPackTypes": ["CAN"],
+                  "allowedPackCategories": ["CSD", "ENERGY"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "270",
+                  "shelfNo": 2,
+                  "allowedPackTypes": ["CAN", "PET_SMALL", "PET_500ML"],
+                  "allowedPackCategories": ["CSD", "JUICE", "ENERGY"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "300",
+                  "shelfNo": 3,
+                  "allowedPackTypes": ["PET_1L", "PET_1_25L"],
+                  "allowedPackCategories": ["CSD", "WATER", "JUICE"]
+                },
+                {
+                  "width": "412",
+                  "doorNo": 1,
+                  "height": "374",
+                  "shelfNo": 4,
+                  "allowedPackTypes": ["PET_1_5L", "PET_2L"],
+                  "allowedPackCategories": ["CSD", "WATER"]
+                }
+              ],
+              "status": "active",
+              "createdAt": "2025-10-06T21:44:54.393Z",
+              "updatedAt": "2025-10-06T21:44:54.393103"
+            }
+          }
+        }
+      ],
+      "coolers": [
+        {
+          "id": 127334,
+          "adminId": 63,
+          "shopId": 453895,
+          "coolerId": 2,
+          "cooler": {
+            "id": 2,
+            "adminId": 6,
+            "organisationId": 4,
+            "name": "G-9",
+            "type": "UPRIGHT COOLER",
+            "owner": "own",
+            "internalWidth": "412",
+            "internalHeight": "1174",
+            "internalDepth": "400",
+            "externalWidth": "504",
+            "externalHeight": "1616",
+            "externalDepth": "552",
+            "noOfShelves": 4,
+            "noOfDoors": 1,
+            "image": "https://storage.googleapis.com/shelfex-cdn/shelfscan/dev/03/clientUploads/29_1759578144058_03_01_01_TROPADM_1759578143099_02PNG.png",
+            "ruleImage": "https://storage.googleapis.com/shelfex-cdn/shelfscan/prod/01/clientUploads/1_1760550678067_01_00_01_USER0_1760550676471_04PNG.png",
+            "layout": [
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "230",
+                "shelfNo": 1,
+                "allowedPackTypes": ["CAN"],
+                "allowedPackCategories": ["CSD", "ENERGY"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "270",
+                "shelfNo": 2,
+                "allowedPackTypes": ["CAN", "PET_SMALL", "PET_500ML"],
+                "allowedPackCategories": ["CSD", "JUICE", "ENERGY"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "300",
+                "shelfNo": 3,
+                "allowedPackTypes": ["PET_1L", "PET_1_25L"],
+                "allowedPackCategories": ["CSD", "WATER", "JUICE"]
+              },
+              {
+                "width": "412",
+                "doorNo": 1,
+                "height": "374",
+                "shelfNo": 4,
+                "allowedPackTypes": ["PET_1_5L", "PET_2L"],
+                "allowedPackCategories": ["CSD", "WATER"]
+              }
+            ],
+            "status": "active",
+            "createdAt": "2025-10-06T21:44:54.393Z",
+            "updatedAt": "2025-10-06T21:44:54.393103"
+          }
+        }
+      ]
+    }
+  ],
+  "totalCount": "60119"
+}

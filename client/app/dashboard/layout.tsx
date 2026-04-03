@@ -10,6 +10,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Settings,
+  Store,
   Users,
 } from "lucide-react";
 import React, { createContext, useContext, useState } from "react";
@@ -56,6 +57,11 @@ const SIDEBAR_ITEMS = [
         label: "Surveys",
         href: "/dashboard/surveys",
         icon: <ClipboardList size={18} />,
+      },
+      {
+        label: "Stores",
+        href: "/dashboard/stores",
+        icon: <Store size={18} />,
       },
       {
         label: "Employees",

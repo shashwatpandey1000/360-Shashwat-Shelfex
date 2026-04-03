@@ -111,7 +111,7 @@ async function redirectToSSO(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Protect everything except public assets and auth routes
-    '/((?!_next/static|_next/image|favicon.ico|auth/).*)',
+    // Protect everything except public assets, auth routes, and API routes
+    '/((?!_next/static|_next/image|favicon.ico|auth/|api/).*)',
   ],
 };
