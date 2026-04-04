@@ -119,14 +119,14 @@ const Header = () => {
     <header className="flex h-[55px] w-full items-center border-b bg-white">
       <div
         className={`h-full border-r transition-all duration-300 ${
-          collapsed ? "w-[75px]" : "w-[290px]"
+          collapsed ? "w-[75px]" : "w-[265px]"
         }`}
       >
         <div className="flex h-full items-center">
           <Button
             variant="ghost"
             onClick={toggle}
-            className={`h-full w-[75px] rounded-none p-0 shadow-none ${collapsed ? "" : "border-r"}`}
+            className={`h-full w-[calc(75px-1px)] rounded-none p-0 shadow-none ${collapsed ? "" : "border-r"}`}
           >
             {collapsed ? (
               <PanelRightClose size={24} />
@@ -156,7 +156,7 @@ const Sidebar = () => {
   return (
     <aside
       className={`flex h-[calc(100vh-55px)] flex-col overflow-y-auto border-r bg-[#fafafa] p-3 transition-all duration-300 ${
-        collapsed ? "w-[75px]" : "w-[290px]"
+        collapsed ? "w-[75px]" : "w-[265px]"
       }`}
     >
       <div className="flex flex-1 flex-col space-y-1">
@@ -199,7 +199,7 @@ const GroupName = ({
   label: string;
   className?: string;
 }) => {
-  if (collapsed) return <div className="my-1.5 border-t"></div>;
+  if (collapsed) return <div className="my-1.5 border-t first:border-none"></div>;
   return (
     <div
       className={`mb-1.5 px-2 font-mono text-[11px] font-light uppercase text-gray-500 ${className}`}

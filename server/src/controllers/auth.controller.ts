@@ -144,8 +144,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     logger.error(`Token refresh failed: ${error.response?.data?.message || error.message}`);
 
     // Clear cookies on refresh failure
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie('access_token', { path: '/' });
+    res.clearCookie('refresh_token', { path: '/' });
 
     res.status(401).json({
       success: false,
@@ -171,8 +171,8 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
       }
     }
 
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie('access_token', { path: '/' });
+    res.clearCookie('refresh_token', { path: '/' });
 
     logger.info('User logged out');
 
