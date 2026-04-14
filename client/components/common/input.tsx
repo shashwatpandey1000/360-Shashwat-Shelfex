@@ -125,10 +125,56 @@ const CheckboxInput = React.forwardRef<HTMLInputElement, CheckboxProps>(
 );
 CheckboxInput.displayName = "CustomInput.Checkbox";
 
+interface SelectInputProps {
+  label?: string;
+  error?: string;
+  containerClassName?: string;
+  id?: string;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>(
+  ({ className, containerClassName, label, error, id, options, placeholder, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
+
+    return (
+      <div className={cn("relative w-full", containerClassName)}>
+        {label && (
+          <label htmlFor={inputId} className={labelStyles}>
+            {label}
+          </label>
+        )}
+        <select
+          ref={ref}
+          id={inputId}
+          className={cn(inputBaseStyles(!!error), className)}
+          {...props}
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {error && <p className={errorStyles}>{error}</p>}
+      </div>
+    );
+  }
+);
+SelectInput.displayName = "CustomInput.Select";
+
 const CustomInput = {
   Text: TextInput,
   Password: PasswordInput,
   Checkbox: CheckboxInput,
+  Select: SelectInput,
 };
 
 export { CustomInput };

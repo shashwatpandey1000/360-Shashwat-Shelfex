@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import {
@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomInput } from '@/components/common/input';
-import MapView from './components/MapView';
+import { storesApi } from '@/lib/api/stores.api';
+import StatusBadge from '@/components/common/StatusBadge';
 import {
   Dialog,
   DialogContent,
@@ -22,21 +23,22 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import fakeData from '@/fake.json';
+import AddStoreDialog from './components/AddStoreDialog';
+import MapView from './components/MapView';
 
-interface LocalStore {
-  id: number;
-  shopId: string;
-  companyShopId: string;
-  routeId: string;
-  storeName: string;
-  cityName: string;
-  retailerName: string | null;
-  latitude: number;
-  longitude: number;
+interface StoreRow {
+  id: string;
+  name: string;
+  slug: string;
   status: string;
-  unitId: number;
-  [key: string]: any;
+  address: { street?: string; city?: string; state?: string; country?: string } | null;
+  location: { latitude?: number; longitude?: number } | null;
+  timezone: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  categoryId: string | null;
+  managerId: string | null;
+  createdAt: string;
 }
 
 export default function StoresPage() {
@@ -44,40 +46,52 @@ export default function StoresPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [data, setData] = useState<LocalStore[]>([]);
+  const [data, setData] = useState<StoreRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
   const isMapView = searchParams.get('view') === 'map';
 
-  useEffect(() => {
-    // Simulate loading from fake.json
+  // Fetch stores from API (server-side pagination + search)
+  const fetchStores = useCallback(async () => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setData(fakeData.shops as LocalStore[]);
-      setTotalCount(Number(fakeData.totalCount));
+    try {
+      const res = await storesApi.list({
+        page: currentPage,
+        perPage,
+        search: search || undefined,
+        status: (statusFilter as any) || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setData(res.data.data);
+      setTotalCount(res.data.total);
+      setTotalPages(res.data.totalPages);
+    } catch {
+      toast.error('Failed to load stores');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
+  }, [currentPage, perPage, search, statusFilter]);
+
+  useEffect(() => {
+    fetchStores();
+  }, [fetchStores]);
+
+  // Debounce search — wait 400ms after typing stops before fetching
+  const [searchInput, setSearchInput] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setCurrentPage(1);
+    }, 400);
     return () => clearTimeout(timer);
-  }, []);
-
-  const filteredData = useMemo(() => {
-    if (!search.trim()) return data;
-    const q = search.toLowerCase();
-    return data.filter(
-      (s) =>
-        s.storeName?.toLowerCase().includes(q) ||
-        s.companyShopId?.toLowerCase().includes(q) ||
-        s.routeId?.toLowerCase().includes(q) ||
-        s.cityName?.toLowerCase().includes(q),
-    );
-  }, [data, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / perPage));
-  const paginatedData = filteredData.slice((currentPage - 1) * perPage, currentPage * perPage);
+  }, [searchInput]);
 
   const toggleView = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -89,77 +103,69 @@ export default function StoresPage() {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const handleSort = (field: string, direction: 'asc' | 'desc') => {
-    console.log(`Sorting by ${field} in ${direction} order`);
+  const handleDeactivate = async (store: StoreRow) => {
+    try {
+      await storesApi.deactivate(store.id);
+      toast.success(`${store.name} deactivated`);
+      fetchStores();
+    } catch {
+      toast.error('Failed to deactivate store');
+    }
   };
 
-  const tableConfig: TableConfig<LocalStore> = {
+  const tableConfig: TableConfig<StoreRow> = {
     uniqueKey: 'id',
     columns: [
       {
         heading: 'Store Name',
-        field: 'storeName',
+        field: 'name',
         isSortable: true,
-        onSort: handleSort,
         visibleFrom: 'always',
       },
       {
-        heading: 'ID',
-        field: 'id',
-        isSortable: true,
-        onSort: handleSort,
+        heading: 'City',
+        field: 'address',
+        isSortable: false,
         visibleFrom: 'always',
         render: (row) => (
-          <span
-            onClick={() => {
-              navigator.clipboard.writeText(row.id.toString());
-              toast.success(`Copied to clipboard - ID ${row.id}`);
-            }}
-            className="cursor-pointer bg-[#c4ffdf] px-2.5 py-1 text-xs text-black hover:bg-[#b3e1c8]"
-          >
-            {row.id}
-          </span>
+          <span>{(row.address as any)?.city || '—'}</span>
         ),
       },
       {
-        heading: 'Route ID',
-        field: 'routeId',
+        heading: 'Status',
+        field: 'status',
         isSortable: true,
-        onSort: handleSort,
         visibleFrom: 'always',
+        render: (row) => <StatusBadge status={row.status} />,
       },
       {
-        heading: 'Unit ID',
-        field: 'unitId',
+        heading: 'Phone',
+        field: 'contactPhone',
         isSortable: false,
-        onSort: handleSort,
-        visibleFrom: 'always',
-      },
-      {
-        heading: 'Company Shop ID',
-        field: 'companyShopId',
-        isSortable: true,
-        onSort: handleSort,
         visibleFrom: 'xl',
+        render: (row) => <span>{row.contactPhone || '—'}</span>,
       },
       {
-        heading: 'City Name',
-        field: 'cityName',
-        isSortable: true,
-        onSort: handleSort,
-        visibleFrom: 'always',
-      },
-      {
-        heading: 'Retailer Name',
-        field: 'retailerName',
-        isSortable: true,
-        onSort: handleSort,
+        heading: 'Slug',
+        field: 'slug',
+        isSortable: false,
         visibleFrom: 'xl',
+        render: (row) => (
+          <span
+            onClick={() => {
+              navigator.clipboard.writeText(row.slug);
+              toast.success(`Copied slug: ${row.slug}`);
+            }}
+            className="cursor-pointer font-mono text-xs text-gray-500 hover:underline"
+          >
+            {row.slug}
+          </span>
+        ),
       },
     ],
     isSelectable: true,
     onSelect: (selectedRows) => {
-      console.log('Selected Rows:', selectedRows);
+      console.log('Selected:', selectedRows);
     },
     rowActions: (row) => (
       <DropdownMenu>
@@ -170,12 +176,26 @@ export default function StoresPage() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="rounded-none">
-          <DropdownMenuItem className="rounded-none" onClick={() => console.log('View Store', row)}>
+          <DropdownMenuItem
+            className="rounded-none"
+            onClick={() => router.push(`/dashboard/stores/${row.id}`)}
+          >
             View Store
           </DropdownMenuItem>
-          <DropdownMenuItem className="rounded-none" onClick={() => console.log('Edit Store', row)}>
+          <DropdownMenuItem
+            className="rounded-none"
+            onClick={() => router.push(`/dashboard/stores/${row.id}?edit=true`)}
+          >
             Edit Store
           </DropdownMenuItem>
+          {row.status !== 'inactive' && (
+            <DropdownMenuItem
+              className="rounded-none text-red-600"
+              onClick={() => handleDeactivate(row)}
+            >
+              Deactivate
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -200,47 +220,28 @@ export default function StoresPage() {
           </Button>
         </div>
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
+          <AddStoreDialog
+            onCreated={fetchStores}
+            trigger={
               <Button size="sm" className="rounded-none text-xs hover:underline">
                 Add Store
               </Button>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-[520px]">
-              <DialogHeader>
-                <DialogTitle>Add Store</DialogTitle>
-              </DialogHeader>
-
-              <div className="py-4">{/* filter fields placeholder */}</div>
-
-              <DialogFooter className="flex justify-end gap-2">
-                <Button variant="outline" className="rounded-none">
-                  Cancel
-                </Button>
-                <Button className="rounded-none">Create</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            }
+          />
           <Dialog>
             <DialogTrigger asChild>
               <Button size="sm" className="rounded-none text-xs hover:underline">
                 Add Stores in Bulk
               </Button>
             </DialogTrigger>
-
             <DialogContent className="sm:max-w-[520px]">
               <DialogHeader>
-                <DialogTitle>Add Store in Bulk</DialogTitle>
+                <DialogTitle>Add Stores in Bulk</DialogTitle>
               </DialogHeader>
-
-              <div className="py-4">{/* filter fields placeholder */}</div>
-
+              <div className="py-4">{/* Bulk import UI — Step 5 */}</div>
               <DialogFooter className="flex justify-end gap-2">
-                <Button variant="outline" className="rounded-none">
-                  Cancel
-                </Button>
-                <Button className="rounded-none">Create</Button>
+                <Button variant="outline" className="rounded-none">Cancel</Button>
+                <Button className="rounded-none">Import</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -252,41 +253,37 @@ export default function StoresPage() {
             <CustomInput.Text
               id="search-stores"
               placeholder="Search stores..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               autoComplete="off"
               className="w-3/4"
             />
           </div>
           <div className="flex w-max justify-end gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   className="flex h-full cursor-pointer items-center justify-center rounded-none border px-4 py-2 text-[13px] text-gray-700 hover:border-black hover:bg-gray-200"
                 >
-                  Filters
+                  {statusFilter ? `Status: ${statusFilter.replace('_', ' ')}` : 'All Status'}
                 </Button>
-              </DialogTrigger>
-
-              <DialogContent className="sm:max-w-[520px]">
-                <DialogHeader>
-                  <DialogTitle>Filters</DialogTitle>
-                </DialogHeader>
-                <div className="flex flex-col gap-6 py-4">
-                  <p className="text-sm text-gray-500">Filter options coming soon.</p>
-                </div>
-                <DialogFooter className="mt-4 flex justify-end gap-2">
-                  <Button variant="outline" className="rounded-none">
-                    Cancel
-                  </Button>
-                  <Button className="rounded-none">Submit</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-full min-w-36 rounded-none">
+                <DropdownMenuItem className="rounded-none" onClick={() => { setStatusFilter(''); setCurrentPage(1); }}>
+                  All
+                </DropdownMenuItem>
+                {['active', 'pending_tour', 'inactive'].map((s) => (
+                  <DropdownMenuItem
+                    key={s}
+                    className="rounded-none"
+                    onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
+                  >
+                    {s.replace('_', ' ')}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -302,10 +299,7 @@ export default function StoresPage() {
                   <DropdownMenuItem
                     key={n}
                     className="rounded-none"
-                    onClick={() => {
-                      setPerPage(n);
-                      setCurrentPage(1);
-                    }}
+                    onClick={() => { setPerPage(n); setCurrentPage(1); }}
                   >
                     {n}
                   </DropdownMenuItem>
@@ -338,9 +332,9 @@ export default function StoresPage() {
           </div>
         </div>
         {isMapView ? (
-          <MapView data={filteredData as any} isLoading={isLoading} />
+          <MapView data={data} isLoading={isLoading} />
         ) : (
-          <DataTable data={paginatedData} config={tableConfig} isLoading={isLoading} />
+          <DataTable data={data} config={tableConfig} isLoading={isLoading} />
         )}
       </div>
     </section>

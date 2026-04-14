@@ -25,7 +25,6 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Only retry on 401 with "Token expired", and not on auth endpoints themselves
     if (
       error.response?.status === 401 &&
       error.response?.data?.message === 'Token expired' &&
@@ -34,7 +33,6 @@ apiClient.interceptors.response.use(
       !originalRequest.url?.includes('/auth/callback')
     ) {
       if (isRefreshing) {
-        // Queue this request until the refresh completes
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => apiClient(originalRequest));
@@ -49,7 +47,6 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        // Refresh failed — redirect to SSO login
         if (typeof window !== 'undefined') {
           window.location.href = '/';
         }
@@ -62,31 +59,5 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-export const authApi = {
-  async callback(code: string, state?: string | null, codeVerifier?: string | null) {
-    const response = await apiClient.post('/auth/callback', {
-      code,
-      state,
-      ...(codeVerifier && { code_verifier: codeVerifier }),
-    });
-    return response.data;
-  },
-
-  async me() {
-    const response = await apiClient.get('/auth/me');
-    return response.data;
-  },
-
-  async refresh() {
-    const response = await apiClient.post('/auth/refresh');
-    return response.data;
-  },
-
-  async logout() {
-    const response = await apiClient.post('/auth/logout');
-    return response.data;
-  },
-};
 
 export default apiClient;

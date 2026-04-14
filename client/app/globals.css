@@ -110,6 +110,11 @@
   background: #555;
 }
 
+/* Hide Google's native autocomplete dropdown — we render our own */
+.pac-container {
+  display: none !important;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

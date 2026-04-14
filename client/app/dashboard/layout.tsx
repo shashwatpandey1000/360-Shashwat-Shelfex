@@ -3,17 +3,15 @@
 import { Button } from "@/components/ui/button";
 import {
   CalendarDays,
-  ChartPie,
   ClipboardList,
   LayoutDashboard,
-  MapPin,
   PanelRightClose,
   PanelRightOpen,
   Settings,
   Store,
   Users,
 } from "lucide-react";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipTrigger,
@@ -23,57 +21,51 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { useAuth } from "@/contexts/auth-context";
 
-const SIDEBAR_ITEMS = [
+// All possible sidebar items — filtered by access map at render time
+const ALL_SIDEBAR_ITEMS = [
   {
-    groupLabel: "Main",
-    items: [
-      {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: <LayoutDashboard size={18} />,
-      },
-      {
-        label: "Schedule",
-        href: "/dashboard/schedule",
-        icon: <CalendarDays size={18} />,
-      },
-      {
-        label: "Tours",
-        href: "/dashboard/tours",
-        icon: <MapPin size={18} />,
-      },
-      {
-        label: "Reports",
-        href: "/dashboard/reports",
-        icon: <ChartPie size={18} />,
-      },
-    ],
+    module: "dashboard",
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: <LayoutDashboard size={18} />,
+    group: "Main",
   },
   {
-    groupLabel: "Management",
-    items: [
-      {
-        label: "Surveys",
-        href: "/dashboard/surveys",
-        icon: <ClipboardList size={18} />,
-      },
-      {
-        label: "Stores",
-        href: "/dashboard/stores",
-        icon: <Store size={18} />,
-      },
-      {
-        label: "Employees",
-        href: "/dashboard/employees",
-        icon: <Users size={18} />,
-      },
-      {
-        label: "Settings",
-        href: "/dashboard/settings",
-        icon: <Settings size={18} />,
-      },
-    ],
+    module: "stores",
+    label: "Stores",
+    href: "/dashboard/stores",
+    icon: <Store size={18} />,
+    group: "Main",
+  },
+  {
+    module: "surveys",
+    label: "Surveys",
+    href: "/dashboard/surveys",
+    icon: <ClipboardList size={18} />,
+    group: "Main",
+  },
+  {
+    module: "employees",
+    label: "Employees",
+    href: "/dashboard/employees",
+    icon: <Users size={18} />,
+    group: "Management",
+  },
+  {
+    module: "schedule",
+    label: "Schedule",
+    href: "/dashboard/schedule",
+    icon: <CalendarDays size={18} />,
+    group: "Management",
+  },
+  {
+    module: "settings",
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: <Settings size={18} />,
+    group: "Management",
   },
 ];
 
@@ -95,7 +87,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-
   const toggle = () => setCollapsed((prev) => !prev);
   const closeSidebar = () => setCollapsed(true);
 
@@ -152,6 +143,22 @@ const Header = () => {
 const Sidebar = () => {
   const { collapsed } = useSidebar();
   const pathname = usePathname();
+  const { hasModule } = useAuth();
+
+  // Filter sidebar items by access map modules
+  const visibleItems = useMemo(() => {
+    return ALL_SIDEBAR_ITEMS.filter((item) => hasModule(item.module));
+  }, [hasModule]);
+
+  // Group visible items
+  const groups = useMemo(() => {
+    const grouped: Record<string, typeof visibleItems> = {};
+    for (const item of visibleItems) {
+      if (!grouped[item.group]) grouped[item.group] = [];
+      grouped[item.group].push(item);
+    }
+    return Object.entries(grouped);
+  }, [visibleItems]);
 
   return (
     <aside
@@ -160,17 +167,16 @@ const Sidebar = () => {
       }`}
     >
       <div className="flex flex-1 flex-col space-y-1">
-        {SIDEBAR_ITEMS.map((group, groupIndex) => (
-          <React.Fragment key={groupIndex}>
+        {groups.map(([groupLabel, items], groupIndex) => (
+          <React.Fragment key={groupLabel}>
             <GroupName
               collapsed={collapsed}
-              label={group.groupLabel}
+              label={groupLabel}
               className={groupIndex > 0 ? "mt-4" : ""}
             />
-
-            {group.items.map((item, itemIndex) => (
+            {items.map((item) => (
               <SideBarItem
-                key={itemIndex}
+                key={item.href}
                 label={item.label}
                 icon={item.icon}
                 href={item.href}

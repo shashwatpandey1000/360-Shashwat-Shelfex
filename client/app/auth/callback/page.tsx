@@ -30,7 +30,8 @@ function CallbackContent() {
 
         await authApi.callback(code, state, pkceVerifier);
 
-        router.replace('/dashboard');
+        // Full reload so AuthProvider re-fetches with the new cookies
+        window.location.href = '/dashboard';
       } catch (err: any) {
         console.error('Callback error:', err);
         setError(err.response?.data?.message || err.message || 'Authentication failed');
@@ -63,7 +64,6 @@ function CallbackContent() {
     <div className="flex min-h-screen items-center justify-center bg-white">
       <div className="text-center">
         <div className="mx-auto mb-4 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-[#131313]" />
-        <p className="text-[14px] text-gray-600">Completing authentication...</p>
       </div>
     </div>
   );

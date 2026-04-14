@@ -20,17 +20,6 @@ export function UserAvatar() {
   }
 
   const getInitials = () => {
-    if (user.name) {
-      return user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    if (user.username) {
-      return user.username.slice(0, 2).toUpperCase();
-    }
     return user.email.slice(0, 2).toUpperCase();
   };
 
@@ -45,13 +34,10 @@ export function UserAvatar() {
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-56 rounded-none">
+      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-64 rounded-none">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 p-1">
-            {user.username && (
-              <p className="text-muted-foreground text-sm leading-none">@{user.username}</p>
-            )}
-            <p className="text-muted-foreground text-xs leading-none">{user.email}</p>
+            <p className="text-muted-foreground truncate text-sm leading-none">{user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

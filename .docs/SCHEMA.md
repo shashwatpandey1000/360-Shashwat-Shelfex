@@ -32,11 +32,11 @@
 | Decision | Rationale |
 |----------|-----------|
 | **360 has its own `users` table** | SSO owns identity (email, password, email_verified). 360 owns org membership, role, access map, status within the platform. Linked by `sso_user_id`. |
-| **Access map is normalized (not a single JSONB blob)** | Queryable, indexable, auditable. Materialized into a JSON blob for Redis cache + API responses. |
+| **IAM-style `resource:action` permissions** | Permissions are strings like `stores:read`, `surveys:execute`. One unified system instead of separate module booleans + capability flags. Adding new permissions requires no schema migration — just a new string. Materialized into a JSON blob for Redis cache + API responses. |
 | **Tour manifest stored as JSONB** | Tour data comes from capture app as a JSON document. Storing the full manifest allows flexible schema evolution without migrations. Key fields also extracted into relational columns for querying. |
 | **Schedule instances are the query hotspot** | Every "what's happening today" query hits this table. Partitioned by `scheduled_date`, heavily indexed. |
 | **Form definitions are versioned JSONB** | Forms evolve over time. Old survey responses must reference the exact form version they answered. |
-| **`org_id` on almost every table** | Enables efficient tenant-scoped queries and future RLS policies. Even on tables reachable via joins, for direct query performance. |
+| **`org_id` on every business table** | Enables efficient tenant-scoped queries and RLS policies. Present on all tables including child tables (scenes, shelves, recurrence_rules, time_windows, etc.) — never rely on joins to resolve tenant context. |
 | **Soft deletes where business requires** | Users, stores, orgs use `status` field (never hard delete). Schedule instances use status state machine. |
 | **No monetary tables in v1** | No billing/payments in the initial build. Currency is an org setting for display purposes only. |
 
@@ -69,10 +69,11 @@ organizations
 ├── contact_phone       TEXT        nullable
 ├── settings            JSONB       NOT NULL, default '{}'
 │                                   -- { notification_prefs: { missed_survey_daily: true, weekly_report: true, new_manager_login: true } }
-├── approved_by         UUID        nullable  -- super admin who approved
+├── approved_by         UUID        nullable, FK → super_admins  -- super admin who approved
 ├── approved_at         TIMESTAMPTZ nullable
 ├── rejected_at         TIMESTAMPTZ nullable
 ├── rejection_reason    TEXT        nullable
+├── created_by          UUID        nullable  -- sso_user_id of the person who registered this org
 ├── created_at          TIMESTAMPTZ NOT NULL, default now()
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
@@ -80,6 +81,26 @@ Indexes:
   - UNIQUE (slug)
   - (status)
   - (country)
+```
+
+### `super_admins`
+
+Platform-level administrators who approve/reject organizations. Completely separate from the multi-tenant `users` table — super admins don't belong to any org. Tiny table (2-3 rows). Checked via a separate auth middleware path on `/api/admin/*` routes.
+
+```
+super_admins
+├── id                  UUID        PK
+├── sso_user_id         UUID        NOT NULL, UNIQUE  -- FK to SSO users table (logical, not physical FK)
+├── email               TEXT        NOT NULL           -- denormalized from SSO
+├── name                TEXT        NOT NULL
+├── status              TEXT        NOT NULL, default 'active'
+│                                   -- 'active' | 'inactive'
+├── created_at          TIMESTAMPTZ NOT NULL, default now()
+└── updated_at          TIMESTAMPTZ NOT NULL, default now()
+
+Indexes:
+  - UNIQUE (sso_user_id)
+  - UNIQUE (email)
 ```
 
 ### `zones`
@@ -123,6 +144,9 @@ users
 ├── avatar_url          TEXT        nullable
 ├── role_template       TEXT        NOT NULL
 │                                   -- 'org_manager' | 'zone_manager' | 'store_manager' | 'surveyor' | 'custom'
+├── scope_type          TEXT        NOT NULL
+│                                   -- 'org' | 'zones' | 'stores'
+│                                   -- defines the type of data scope for this user (enforced: all user_data_scopes rows must match)
 ├── status              TEXT        NOT NULL, default 'active'
 │                                   -- 'active' | 'inactive' | 'pending_first_login'
 ├── language_preference TEXT        nullable           -- user's preferred language, overrides org default
@@ -136,6 +160,7 @@ Indexes:
   - (org_id)
   - (org_id, role_template)
   - (org_id, status)
+  - (org_id, scope_type)
   - (email)
 ```
 
@@ -162,136 +187,133 @@ Constraints:
   - UNIQUE (org_id, name)  -- one template per name per org (null org_id = system defaults)
 ```
 
-### `role_template_modules`
+### `role_template_permissions`
 
-Module-level permissions per role template.
+IAM-style permissions per role template. Each row is one `resource:action` string. When a user is created from a template, these are copied to `user_permissions`.
 
 ```
-role_template_modules
+role_template_permissions
 ├── id                  UUID        PK
+├── org_id              UUID        nullable, FK → organizations  -- null for system defaults, matches role_template.org_id
 ├── role_template_id    UUID        NOT NULL, FK → role_templates
-├── module              TEXT        NOT NULL
-│                                   -- 'dashboard' | 'stores' | 'surveys' | 'employees' | 'schedule' | 'settings'
-├── can_read            BOOLEAN     NOT NULL, default false
-├── can_write           BOOLEAN     NOT NULL, default false
-├── can_delete          BOOLEAN     NOT NULL, default false
-└── can_download        BOOLEAN     NOT NULL, default false
+├── permission          TEXT        NOT NULL
+│                                   -- format: 'resource:action'
+│                                   -- resources: dashboard, stores, surveys, employees, schedule, settings
+│                                   -- actions: read, write, delete, download, execute, manage, import
+│                                   -- examples: 'stores:read', 'surveys:execute', 'employees:manage', 'stores:import'
+└── created_at          TIMESTAMPTZ NOT NULL, default now()
+
+Indexes:
+  - (org_id)
+  - (role_template_id)
 
 Constraints:
-  - UNIQUE (role_template_id, module)
+  - UNIQUE (role_template_id, permission)
 ```
 
-### `role_template_capabilities`
-
-Capability flags per role template.
+**Permission registry (code-level constant, not a DB table):**
 
 ```
-role_template_capabilities
-├── id                  UUID        PK
-├── role_template_id    UUID        NOT NULL, FK → role_templates
-├── capability          TEXT        NOT NULL
-│                                   -- 'survey_execution' | 'employee_management' | 'schedule_management' | 'store_management'
-└── enabled             BOOLEAN     NOT NULL, default false
+Resources: dashboard, stores, surveys, employees, schedule, settings
+Actions:   read, write, delete, download, execute, manage, import
 
-Constraints:
-  - UNIQUE (role_template_id, capability)
+Valid permissions (v1):
+  dashboard:read
+  stores:read, stores:write, stores:delete, stores:download, stores:import
+  surveys:read, surveys:write, surveys:delete, surveys:download, surveys:execute
+  employees:read, employees:write, employees:delete, employees:manage
+  schedule:read, schedule:write, schedule:delete
+  settings:read, settings:write
+
+Adding new permissions (e.g., surveys:export, stores:bulk_edit) requires:
+  - Add to the code-level PERMISSIONS constant
+  - Insert rows into role_template_permissions / user_permissions
+  - NO schema migration needed
 ```
 
-### `user_module_permissions`
+### `user_permissions`
 
-Materialized module permissions per user. Written when user is created/updated.
+Materialized permissions per user. Written when user is created/updated. This is the single source of truth for what a user can do — checked on every API request.
 
 ```
-user_module_permissions
+user_permissions
 ├── id                  UUID        PK
 ├── user_id             UUID        NOT NULL, FK → users
-├── module              TEXT        NOT NULL
-│                                   -- 'dashboard' | 'stores' | 'surveys' | 'employees' | 'schedule' | 'settings'
-├── can_read            BOOLEAN     NOT NULL, default false
-├── can_write           BOOLEAN     NOT NULL, default false
-├── can_delete          BOOLEAN     NOT NULL, default false
-└── can_download        BOOLEAN     NOT NULL, default false
+├── permission          TEXT        NOT NULL
+│                                   -- same format as role_template_permissions.permission
+│                                   -- e.g., 'stores:read', 'surveys:execute', 'employees:manage'
+└── created_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
   - (user_id)
 
 Constraints:
-  - UNIQUE (user_id, module)
+  - UNIQUE (user_id, permission)
 ```
 
 ### `user_data_scopes`
 
-Defines which data a user can see. A user has one scope type but may have multiple scope entries (e.g., access to 3 specific stores).
+Defines which data a user can see. A user has one scope type (stored on `users.scope_type`) but may have multiple scope entries (e.g., access to 3 specific stores). All rows for a given user must match the user's `scope_type`. When `scope_type = 'org'`, no rows are needed in this table (full org access is implied).
 
 ```
 user_data_scopes
 ├── id                  UUID        PK
 ├── user_id             UUID        NOT NULL, FK → users
-├── scope_type          TEXT        NOT NULL
-│                                   -- 'org' | 'zones' | 'stores'
-├── scope_entity_id     UUID        nullable
-│                                   -- null when scope_type = 'org' (means full org access)
-│                                   -- zone_id when scope_type = 'zones'
-│                                   -- store_id when scope_type = 'stores'
+├── scope_entity_id     UUID        NOT NULL
+│                                   -- zone_id when user.scope_type = 'zones'
+│                                   -- store_id when user.scope_type = 'stores'
+│                                   -- no rows exist when user.scope_type = 'org' (full access)
 └── created_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
   - (user_id)
-  - (user_id, scope_type)
 
 Constraints:
-  - When scope_type = 'org', scope_entity_id must be null (enforced via CHECK or app logic)
-```
-
-### `user_capabilities`
-
-Per-user capability flags.
-
-```
-user_capabilities
-├── id                  UUID        PK
-├── user_id             UUID        NOT NULL, FK → users
-├── capability          TEXT        NOT NULL
-│                                   -- 'survey_execution' | 'employee_management' | 'schedule_management' | 'store_management'
-└── enabled             BOOLEAN     NOT NULL, default false
-
-Indexes:
-  - (user_id)
-
-Constraints:
-  - UNIQUE (user_id, capability)
+  - No rows should exist for users with scope_type = 'org' (enforced via app logic)
 ```
 
 ### Access Map Materialization
 
-Not a table — a Redis-cached JSON blob built from the three tables above:
+Not a table — a Redis-cached JSON blob built from `user_permissions` + `user_data_scopes` + `users.scope_type`:
 
 ```jsonc
 {
   "user_id": "uuid",
   "org_id": "uuid",
   "role_template": "store_manager",
+  "scope_type": "stores",               // from users.scope_type
   "data_scope": {
-    "type": "stores",
     "store_ids": ["uuid-1", "uuid-2"]    // resolved from user_data_scopes
-    // or "zone_ids": [...] when type = "zones"
+    // or "zone_ids": [...] when scope_type = "zones"
+    // or empty {} when scope_type = "org" (full access)
   },
-  "modules": {
-    "dashboard":  { "read": true, "write": false, "delete": false, "download": false },
-    "stores":     { "read": true, "write": false, "delete": false, "download": false },
-    "surveys":    { "read": true, "write": false, "delete": false, "download": false },
-    "employees":  { "read": true, "write": true, "delete": false, "download": false },
-    "schedule":   { "read": true, "write": false, "delete": false, "download": false },
-    "settings":   { "read": true, "write": false, "delete": false, "download": false }
-  },
-  "capabilities": {
-    "survey_execution": false,
-    "employee_management": true,
-    "schedule_management": false,
-    "store_management": false
-  }
+
+  // flat permission list — what the backend checks on every request
+  "permissions": [
+    "dashboard:read",
+    "stores:read",
+    "surveys:read",
+    "employees:read",
+    "employees:write",
+    "employees:manage",
+    "schedule:read",
+    "settings:read"
+  ],
+
+  // derived from permissions — pre-computed for frontend sidebar rendering
+  // a module appears here if the user has ANY permission starting with that resource
+  "modules": ["dashboard", "stores", "surveys", "employees", "schedule", "settings"]
 }
 ```
+
+**Default role templates → permissions mapping:**
+
+| Role | Permissions |
+|------|------------|
+| **Org Manager** | `dashboard:read`, `stores:read`, `stores:write`, `stores:delete`, `stores:download`, `stores:import`, `surveys:read`, `surveys:write`, `surveys:delete`, `surveys:download`, `employees:read`, `employees:write`, `employees:delete`, `employees:manage`, `schedule:read`, `schedule:write`, `schedule:delete`, `settings:read`, `settings:write` |
+| **Zone Manager** | `dashboard:read`, `stores:read`, `stores:write`, `stores:download`, `surveys:read`, `surveys:download`, `employees:read`, `employees:write`, `employees:manage`, `schedule:read`, `settings:read` |
+| **Store Manager** | `dashboard:read`, `stores:read`, `surveys:read`, `employees:read`, `employees:write`, `employees:manage`, `schedule:read`, `settings:read` |
+| **Surveyor** | `surveys:execute` |
 
 ---
 
@@ -398,6 +420,7 @@ Individual panoramic scenes within a tour. Extracted from tour_manifest for rela
 ```
 scenes
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── tour_id             UUID        NOT NULL, FK → tours ON DELETE CASCADE
 ├── external_scene_id   TEXT        NOT NULL  -- scene_id from capture app (e.g., "scene_1773473905042")
 ├── panorama_url        TEXT        NOT NULL  -- CDN URL to stitched panorama
@@ -412,6 +435,7 @@ scenes
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (tour_id)
   - (tour_id, display_order)
 ```
@@ -423,6 +447,7 @@ Shelf markers placed on panoramic scenes. These are the "hotspots" where survey 
 ```
 shelves
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── tour_id             UUID        NOT NULL, FK → tours ON DELETE CASCADE
 ├── scene_id            UUID        NOT NULL, FK → scenes ON DELETE CASCADE
 ├── label               TEXT        NOT NULL  -- "Shelf A1 — Snacks"
@@ -436,6 +461,7 @@ shelves
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (tour_id)
   - (scene_id)
 ```
@@ -476,6 +502,7 @@ Defines the pattern of when a schedule repeats. A template can have multiple rec
 ```
 recurrence_rules
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── schedule_template_id UUID       NOT NULL, FK → schedule_templates ON DELETE CASCADE
 ├── recurrence_type     TEXT        NOT NULL
 │                                   -- 'daily' | 'weekdays' | 'specific_days' | 'odd_days' | 'even_days' | 'interval' | 'custom_rrule'
@@ -488,6 +515,7 @@ recurrence_rules
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (schedule_template_id)
 ```
 
@@ -498,6 +526,7 @@ Time slots within a recurrence rule. Each window is one survey opportunity per d
 ```
 time_windows
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── recurrence_rule_id  UUID        NOT NULL, FK → recurrence_rules ON DELETE CASCADE
 ├── window_start        TIME        NOT NULL  -- local time, e.g., '08:00'
 ├── window_end          TIME        NOT NULL  -- local time, e.g., '13:00'
@@ -507,6 +536,7 @@ time_windows
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (recurrence_rule_id)
 
 Constraints:
@@ -520,6 +550,7 @@ Persistent mapping: "For this store + recurrence rule + time window, this survey
 ```
 surveyor_assignments
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── store_id            UUID        NOT NULL, FK → stores
 ├── recurrence_rule_id  UUID        NOT NULL, FK → recurrence_rules
 ├── time_window_id      UUID        NOT NULL, FK → time_windows
@@ -529,6 +560,7 @@ surveyor_assignments
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (store_id)
   - (surveyor_id)
 
@@ -646,6 +678,7 @@ Scenes captured during a survey's fresh 360. Links to the original baseline scen
 ```
 survey_scenes
 ├── id                  UUID        PK
+├── org_id              UUID        NOT NULL, FK → organizations  -- denormalized for direct tenant filtering + RLS
 ├── survey_id           UUID        NOT NULL, FK → surveys ON DELETE CASCADE
 ├── external_scene_id   TEXT        NOT NULL  -- scene_id from capture app
 ├── baseline_scene_id   UUID        nullable, FK → scenes  -- matching scene in baseline tour
@@ -657,6 +690,7 @@ survey_scenes
 └── updated_at          TIMESTAMPTZ NOT NULL, default now()
 
 Indexes:
+  - (org_id)
   - (survey_id)
 ```
 
@@ -864,19 +898,21 @@ Indexes:
 ## 10. Entity Relationship Diagram
 
 ```
+super_admins (standalone — no org, platform-level)
+
 organizations ─────┬──────────────────────────────────────────────────────┐
   │                │                                                      │
   │ 1:N            │ 1:N                                                  │ 1:N
   ▼                ▼                                                      ▼
-zones            users                                          schedule_templates
+zones            users (has scope_type)                         schedule_templates
   │                │                                                      │
-  │ 1:N            ├── user_module_permissions (1:N)                      │ 1:N
+  │ 1:N            ├── user_permissions (1:N, IAM-style)                  │ 1:N
   ▼                ├── user_data_scopes (1:N)                             ▼
-stores             ├── user_capabilities (1:N)                  recurrence_rules
+stores             │                                       recurrence_rules (has org_id)
   │                │                                                      │
   ├── tours (1:N)  │                                                      │ 1:N
-  │    ├── scenes  │                                                      ▼
-  │    └── shelves │                                              time_windows
+  │    ├── scenes (has org_id)                                            ▼
+  │    └── shelves (has org_id)                              time_windows (has org_id)
   │                │                                                      │
   ├── store_surveyors (N:M with users)                                    │
   │                │                                                      │
@@ -900,8 +936,7 @@ stores             ├── user_capabilities (1:N)                  recurrence
   └── form_definitions (via org_id)
 
 role_templates
-  ├── role_template_modules (1:N)
-  └── role_template_capabilities (1:N)
+  └── role_template_permissions (1:N, IAM-style)
 
 industries (lookup)
 store_categories (lookup)
@@ -921,7 +956,7 @@ notifications (per user)
 | "All pending/in-progress slots org-wide" | `schedule_instances` | `(org_id, scheduled_date, status)` |
 | "Surveys for a store, newest first" | `surveys` | `(store_id, created_at DESC)` |
 | "Active tour for a store" | `tours` | `(store_id, status) WHERE status = 'active'` |
-| "User's access map" | `user_module_permissions` + `user_data_scopes` + `user_capabilities` | `(user_id)` on all three |
+| "User's access map" | `user_permissions` + `user_data_scopes` | `(user_id)` on both |
 | "Stores in a zone" | `stores` | `(org_id, zone_id)` |
 | "Unread notifications" | `notifications` | `(user_id, is_read, created_at DESC)` |
 | "Org's stores by status" | `stores` | `(org_id, status)` |
@@ -965,11 +1000,12 @@ ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON stores
   USING (org_id = current_setting('app.current_org_id')::uuid);
 
--- Applied to: organizations, zones, stores, users, schedule_templates,
---             recurrence_rules, schedule_instances, tours, scenes, shelves,
---             surveys, survey_photos, survey_ai_results, form_definitions,
---             survey_question_answers, notifications, store_surveyors,
---             surveyor_assignments
+-- Applied to: organizations, zones, stores, users, user_permissions,
+--             role_templates, role_template_permissions,
+--             schedule_templates, recurrence_rules, schedule_instances,
+--             tours, scenes, shelves, surveys, survey_photos,
+--             survey_ai_results, form_definitions, survey_question_answers,
+--             notifications, store_surveyors, surveyor_assignments
 ```
 
 ---
@@ -978,8 +1014,8 @@ CREATE POLICY tenant_isolation ON stores
 
 | Category | Tables | Names |
 |----------|--------|-------|
-| **Org & Geography** | 2 | organizations, zones |
-| **Users & Access** | 6 | users, role_templates, role_template_modules, role_template_capabilities, user_module_permissions, user_data_scopes, user_capabilities |
+| **Org & Geography** | 3 | organizations, super_admins, zones |
+| **Users & Access** | 4 | users, role_templates, role_template_permissions, user_permissions, user_data_scopes |
 | **Stores** | 2 | stores, store_surveyors |
 | **Tours** | 3 | tours, scenes, shelves |
 | **Schedule** | 5 | schedule_templates, recurrence_rules, time_windows, surveyor_assignments, schedule_instances |
@@ -987,7 +1023,7 @@ CREATE POLICY tenant_isolation ON stores
 | **Forms** | 3 | form_definitions, store_form_assignments, survey_question_answers |
 | **Lookups** | 2 | industries, store_categories |
 | **Notifications** | 1 | notifications |
-| **Total** | **28** | |
+| **Total** | **27** | |
 
 ---
 

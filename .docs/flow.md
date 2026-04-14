@@ -18,18 +18,41 @@ Every user has an **access map** — a configuration that defines exactly what t
 
 ### 0.2 — Access Dimensions
 
-The access map covers these dimensions:
+The access map has two orthogonal dimensions:
 
-| Dimension              | Examples                                                                                           |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| **Data scope**         | Which stores, zones, regions, or the entire org can this user see?                                 |
-| **Module access**      | Dashboard, Stores, Surveys, Employees, Settings, Schedule — which sidebar items are visible?       |
-| **Action permissions** | Read, write, download, delete — per module (e.g., can read surveys but not download survey photos) |
-| **Survey execution**   | Can this user perform surveys? (surveyors: yes, most managers: optional)                           |
-| **Employee management**| Can this user add/remove/manage surveyors or other employees?                                      |
-| **Schedule management**| Can this user view/edit survey schedules?                                                          |
-| **Store management**   | Can this user add/edit/deactivate stores?                                                          |
-| **Location scope**     | Access restricted to specific stores, zones, regions, or all                                       |
+**Dimension 1: Permissions (what actions can you take?)**
+
+Permissions use an IAM-style `resource:action` format. Each permission is a string:
+
+| Permission | What it allows |
+| ---------- | -------------- |
+| `stores:read` | View store listings and details |
+| `stores:write` | Create/edit stores |
+| `stores:delete` | Deactivate stores |
+| `stores:import` | Bulk CSV import of stores |
+| `surveys:read` | View survey results |
+| `surveys:execute` | Physically perform surveys (surveyors) |
+| `surveys:download` | Download survey photos/reports |
+| `employees:read` | View employee list |
+| `employees:write` | Create/edit employees |
+| `employees:manage` | Manage surveyor assignments |
+| `schedule:read` | View survey schedules |
+| `schedule:write` | Create/edit schedules |
+| `dashboard:read` | View dashboard metrics |
+| `settings:read` | View org settings |
+| `settings:write` | Edit org settings |
+
+Sidebar modules are derived automatically: if a user has **any** permission starting with `stores:`, the Stores module appears in their sidebar.
+
+**Dimension 2: Data scope (which data can you see?)**
+
+| Scope type | What it means |
+| ---------- | ------------- |
+| `org` | Sees everything in the organization |
+| `zones` | Sees only stores/data in their assigned zone(s) and sub-zones |
+| `stores` | Sees only their specifically assigned store(s) |
+
+These two dimensions are independent. Permissions control **what actions**, data scope controls **which data**. A zone manager with `stores:read` can only read stores in their zone — the permission grants the action, the scope filters the data.
 
 ### 0.3 — Default Role Templates
 
@@ -49,7 +72,7 @@ The org manager can create users with **custom access** that doesn't fit any pre
 - A read-only auditor who can view survey data and download reports but change nothing
 - A regional surveyor coordinator who manages surveyors across a region but doesn't do surveys themselves
 
-**How:** When creating a user, the org manager either picks a default role template OR builds a custom access map by toggling individual permissions.
+**How:** When creating a user, the org manager either picks a default role template (which comes with a preset permission set) OR builds a custom permission set by toggling individual `resource:action` permissions from a grid.
 
 ### 0.5 — Frontend & Backend Enforcement
 
@@ -192,11 +215,11 @@ List of all surveys across all stores. Filterable by date, store, time slot, sta
 
 List of all store managers, surveyors, and custom-role users in the org. Searchable, filterable by role/store/zone/status.
 
-**Employee Detail:** Profile info, assigned stores, access map summary, activity log (tours created, surveys submitted, etc.). Activity logs should be stored from day 1 — they provide granular audit trails and full operational history across the platform.
+**Employee Detail:** Profile info, assigned stores, permission summary, activity log (tours created, surveys submitted, etc.). Activity logs should be stored from day 1 — they provide granular audit trails and full operational history across the platform.
 
 **Creating users:** Org manager can create users with:
 - A default role template (store manager, zone manager, surveyor), OR
-- A custom access map (see Flow 0, section 0.4).
+- A custom permission set (see Flow 0, section 0.4).
 
 ---
 

@@ -127,18 +127,28 @@ This does NOT mean building everything for every country now. It means **never h
 
 Every user has an **access map** — a configuration defining exactly what they can and cannot do. The system checks this map before every action.
 
-**Access Dimensions:**
+**Two orthogonal access dimensions:**
 
-| Dimension              | Examples                                                                                           |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| **Data scope**         | Which stores, zones, regions, or the entire org can this user see?                                 |
-| **Module access**      | Dashboard, Stores, Surveys, Employees, Settings, Schedule — which sidebar items are visible?       |
-| **Action permissions** | Read, write, download, delete — per module (e.g., can read surveys but not download photos)        |
-| **Survey execution**   | Can this user perform surveys? (surveyors: yes, most managers: optional)                           |
-| **Employee management**| Can this user add/remove/manage surveyors or other employees?                                      |
-| **Schedule management**| Can this user view/edit survey schedules?                                                          |
-| **Store management**   | Can this user add/edit/deactivate stores?                                                          |
-| **Location scope**     | Access restricted to specific stores, zones, regions, or all                                       |
+*Dimension 1: Permissions (IAM-style `resource:action` strings)*
+
+| Permission | What it allows |
+| ---------- | -------------- |
+| `stores:read`, `stores:write`, `stores:delete`, `stores:import` | View, edit, deactivate, bulk-import stores |
+| `surveys:read`, `surveys:write`, `surveys:delete`, `surveys:download`, `surveys:execute` | View, edit, delete, download, physically perform surveys |
+| `employees:read`, `employees:write`, `employees:delete`, `employees:manage` | View, edit, delete, manage surveyor assignments |
+| `schedule:read`, `schedule:write`, `schedule:delete` | View, create/edit, delete schedules |
+| `dashboard:read` | View dashboard metrics |
+| `settings:read`, `settings:write` | View, edit org settings |
+
+Sidebar modules are derived: if user has any `stores:*` permission, the Stores module appears. Adding new permissions (e.g., `surveys:export`) requires no schema migration — just a new string.
+
+*Dimension 2: Data scope (which data do those permissions apply to)*
+
+| Scope type | What it means |
+| ---------- | ------------- |
+| `org` | Sees everything in the organization |
+| `zones` | Sees only stores/data in assigned zone(s) and sub-zones |
+| `stores` | Sees only specifically assigned store(s) |
 
 **Default Role Templates:**
 
@@ -179,7 +189,7 @@ Custom users can have access at any cut of this hierarchy.
 
 - Edit profile (name, email)
 - Change password (redirects to Shelfex SSO)
-- Deactivate/reactivate accounts (by users with employee management access)
+- Deactivate/reactivate accounts (by users with `employees:manage` permission)
 
 ---
 
@@ -223,9 +233,9 @@ Custom users can have access at any cut of this hierarchy.
 
 ### 3.4 Employee Management
 
-- Create users with a **default role template** (org manager, zone manager, store manager, surveyor) OR a **custom access map** (see 1.2)
+- Create users with a **default role template** (org manager, zone manager, store manager, surveyor) OR a **custom permission set** (see 1.2)
 - View all employees: store managers, zone managers, surveyors, custom users. Searchable, filterable by role/store/zone/status
-- Employee detail: profile info, assigned stores, access map summary, activity log
+- Employee detail: profile info, assigned stores, permission summary, activity log
 - Org manager can view surveyor assignments per store but **cannot change them** — that's the store manager's job
 
 ### 3.5 Org-Level Survey Schedule

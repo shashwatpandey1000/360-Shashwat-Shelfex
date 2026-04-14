@@ -231,8 +231,8 @@ The frontend is organized into two major route groups:
 
 | Area | Description |
 |------|-------------|
-| **Layout (Sidebar + Header)** | Dynamic sidebar renders based on access map. Only modules the user can read appear. |
-| **Permissions components** | `CanAccessModule` (module-level gate), `CanPerform` (capability gate), `usePermission` hook — all read from access map context. |
+| **Layout (Sidebar + Header)** | Dynamic sidebar renders based on access map. Only modules where the user has any permission appear. |
+| **Permissions components** | `<Can permission="stores:write">` (unified permission gate), `usePermission('stores:write')` hook, `useHasAny('stores:*')` for module-level checks — all read from access map context. Single permission system, no separate capability gates. |
 | **Form system** | Form renderer (renders from JSON definition), form builder (drag-and-drop for org manager), per-question-type renderers. |
 | **Schedule system** | Schedule builder UI, calendar view of materialized slots, surveyor slot assignment. |
 | **Panorama viewer** | 360° tour viewer with shelf hotspots, survey photo overlays, AI result overlays. |
@@ -253,17 +253,17 @@ The frontend is organized into two major route groups:
 
 3. Sidebar (Client Component)
    ├── Reads AccessMap from context
-   └── Renders only modules where accessMap.modules[module].read === true
+   └── Renders only modules in accessMap.modules[] (pre-computed from permissions)
 
 4. Page
-   ├── Checks access map from context
+   ├── Checks access map from context (does user have any permission for this resource?)
    ├── If no access → redirect to /dashboard
    └── Fetches data via API with JWT in Authorization header (API also enforces access map)
 
 5. Action buttons (Client Components)
-   ├── <CanAccessModule module="stores" action="write"> wraps Edit button
-   ├── <CanPerform capability="employee_management"> wraps Surveyor panel
-   └── Buttons not rendered if no access → no API call possible
+   ├── <Can permission="stores:write"> wraps Edit button
+   ├── <Can permission="employees:manage"> wraps Surveyor panel
+   └── Buttons not rendered if no permission → no API call possible
 ```
 
 ### Three Layers of Access Enforcement (Frontend)
@@ -271,8 +271,8 @@ The frontend is organized into two major route groups:
 | Layer | Where | What It Does | Fail Mode |
 |-------|-------|-------------|-----------|
 | **Next.js Middleware** | `middleware.ts` | Checks JWT exists in cookie, basic expiry check | Redirect to Shelfex SSO OAuth authorize |
-| **Page-Level Check** | Each page component | Reads access map from context, checks module access | Redirect if no access |
-| **Component-Level Gate** | `<CanAccessModule>`, `usePermission()` | Show/hide UI elements (buttons, panels, tabs) | Hidden UI, no API call triggered |
+| **Page-Level Check** | Each page component | Reads access map from context, checks `accessMap.modules` includes resource | Redirect if no access |
+| **Component-Level Gate** | `<Can permission="...">`, `usePermission()` | Show/hide UI elements (buttons, panels, tabs) | Hidden UI, no API call triggered |
 
 Backend is always the final authority — frontend checks are UX optimizations, not security boundaries.
 
@@ -297,7 +297,7 @@ Auth Middleware ──▶ Verifies SSO-issued JWT (shared signing key), loads ac
 Tenant Context Middleware ──▶ Sets org_id from accessMap (user's org association)
   │
   ▼
-Module Access Check ──▶ Verifies accessMap.modules[module][action]
+Permission Check ──▶ Verifies accessMap.permissions includes required 'resource:action' string
   │
   ▼
 Route Handler
@@ -321,7 +321,7 @@ Route Handler
 | `/api/orgs/*` | Org | CRUD org, org settings, org approval/rejection |
 | `/api/stores/*` | Store | CRUD stores, bulk CSV import, store profile, public store data |
 | `/api/stores/:id/tour/*` | Tour | Tour CRUD, tour sync from capture app |
-| `/api/employees/*` | Employee | CRUD users/employees, assign roles/access maps |
+| `/api/employees/*` | Employee | CRUD users/employees, assign roles/permissions |
 | `/api/schedules/*` | Schedule | CRUD schedule templates, preview slots, per-store overrides |
 | `/api/schedules/slots/*` | Schedule | Query slots, slot status updates, surveyor assignment |
 | `/api/surveys/*` | Survey | Survey CRUD, submit survey, survey detail, survey photos |
@@ -337,18 +337,18 @@ Every query that returns org data passes through the scope filter:
 ┌─────────────────────────────────────────────────────────────┐
 │                   Data Scope Resolution                      │
 │                                                             │
-│  accessMap.data_scope.type = 'org'                          │
+│  accessMap.scope_type = 'org'                               │
 │    → WHERE org_id = :org_id                                 │
 │    → User sees all stores in the org                        │
 │                                                             │
-│  accessMap.data_scope.type = 'zones'                        │
+│  accessMap.scope_type = 'zones'                             │
 │    → WHERE store_id IN (                                    │
 │        SELECT id FROM stores                                │
 │        WHERE zone_id IN (:zone_ids)                         │
 │      )                                                      │
 │    → User sees only stores in their assigned zones          │
 │                                                             │
-│  accessMap.data_scope.type = 'stores'                       │
+│  accessMap.scope_type = 'stores'                            │
 │    → WHERE store_id IN (:store_ids)                         │
 │    → User sees only their specifically assigned stores      │
 │                                                             │
@@ -706,9 +706,9 @@ Org Manager (data_scope.type = "org")
 
 ```
 1. CREATE USER
-   ├── Org manager picks role template OR builds custom access map
-   ├── System writes to: user_module_permissions, user_data_scopes, user_capabilities tables
-   ├── System materializes AccessMap JSON
+   ├── Org manager picks role template OR builds custom permission set
+   ├── System writes to: user_permissions, user_data_scopes tables
+   ├── System materializes AccessMap JSON (permissions list + derived modules list)
    └── Caches in Redis: accessmap:{user_id} → AccessMap JSON
 
 2. USER LOGS IN (via Shelfex SSO OAuth 2.0)
@@ -720,7 +720,7 @@ Org Manager (data_scope.type = "org")
    └── Client fetches: { user, accessMap } from 360 API
 
 3. PERMISSIONS CHANGED (by org manager)
-   ├── Update normalized DB tables
+   ├── Update user_permissions table (insert/delete permission strings)
    ├── Re-materialize AccessMap JSON
    ├── Update Redis cache
    ├── Add old access map version to a token blacklist (or rely on short JWT TTL)
@@ -729,7 +729,7 @@ Org Manager (data_scope.type = "org")
 4. EVERY API REQUEST
    ├── Auth middleware verifies SSO-issued JWT (shared signing key, issuer: accounts.shelfex.com)
    ├── Loads AccessMap from Redis using user_id from JWT claims
-   ├── Module access middleware checks accessMap.modules[module][action]
+   ├── Permission middleware checks accessMap.permissions.includes('resource:action')
    ├── Route handler applies data scope filter to all queries
    └── If denied at any step → 403 Forbidden
 
@@ -1143,9 +1143,8 @@ organizations (1)
   │           └── store_form_assignments (1)
   │
   ├── users (N)
-  │     ├── user_module_permissions (N)
-  │     ├── user_data_scopes (N)
-  │     └── user_capabilities (N)
+  │     ├── user_permissions (N, IAM-style 'resource:action' strings)
+  │     └── user_data_scopes (N)
   │
   ├── schedule_templates (N)
   │     └── recurrence_rules (N)
@@ -1156,8 +1155,7 @@ organizations (1)
   ├── form_definitions (N) ← versioned per lineage
   │
   └── role_templates (N)
-        ├── role_template_modules (N)
-        └── role_template_capabilities (N)
+        └── role_template_permissions (N, IAM-style 'resource:action' strings)
 ```
 
 ### Multi-Tenancy Strategy
@@ -1186,10 +1184,9 @@ organizations (1)
 | `organizations` | Org profiles and settings | id, name, status, country, currency, timezone |
 | `zones` | Geographic groupings within org | id, org_id, name, parent_zone_id |
 | `stores` | Physical store locations | id, org_id, zone_id, name, slug, status, timezone |
-| `users` | All user accounts | id, org_id, email, password_hash, role_template, status |
-| `user_module_permissions` | Per-user module access | user_id, module, can_read/write/delete/download |
-| `user_data_scopes` | Per-user data visibility scope | user_id, scope_type, scope_id |
-| `user_capabilities` | Per-user capability flags | user_id, capability, scope_type, scope_id |
+| `users` | All user accounts | id, org_id, email, role_template, scope_type, status |
+| `user_permissions` | Per-user IAM-style permissions | user_id, permission (e.g., 'stores:read', 'surveys:execute') |
+| `user_data_scopes` | Per-user data visibility scope | user_id, scope_entity_id |
 | `schedule_templates` | Schedule definitions | id, org_id, store_id, timezone, is_active |
 | `recurrence_rules` | When schedules repeat | id, template_id, recurrence_type, days_of_week |
 | `time_windows` | Survey time slots | id, rule_id, window_start, window_end |
@@ -1679,7 +1676,7 @@ Extraction steps:
 | **Scheduling** | EventBridge Scheduler (one-time `at()`) | Step Functions, custom cron table | Native timezone support, $1/million invocations, built-in retry/DLQ |
 | **Auth** | Self-built (JWT + access map) | Auth0, Cognito, Clerk | Permission model is well-defined and custom (access maps); external auth adds latency per request and doesn't solve the authorization problem. JWT allows stateless verification. |
 | **File uploads** | S3 presigned URLs + Lambda processing | Multer on API server | No file data through API servers, Lambda scales with upload volume independently |
-| **Access control** | RBAC templates + ABAC access maps (hybrid) | Pure RBAC, external policy engine (OPA/Cerbos) | Matches the product requirement exactly (roles as templates, custom users); external engines add complexity without proportional benefit at this scale |
+| **Access control** | IAM-style `resource:action` permissions + data scope hierarchy | Pure RBAC, boolean module grids, external policy engine (OPA/Cerbos) | One unified permission model instead of separate module permissions + capabilities. Infinitely extensible (new permissions = new strings, no migrations). Roles are templates that generate permission sets. Data scope (org/zones/stores) is orthogonal to permissions. |
 
 ---
 
