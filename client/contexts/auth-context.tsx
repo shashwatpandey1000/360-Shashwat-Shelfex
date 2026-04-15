@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authApi.logout();
       const ssoUrl =
-        process.env.NEXT_PUBLIC_SSO_URL || "http://localhost:8000/api/v1";
+        process.env.NEXT_PUBLIC_SSO_API_URL || "http://localhost:8000/api/v1";
       window.location.href = `${ssoUrl}/auth/logout?redirect_uri=${encodeURIComponent(window.location.origin)}`;
     } catch (error) {
       console.error("Logout failed:", error);

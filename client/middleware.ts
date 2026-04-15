@@ -72,7 +72,7 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 }
 
 async function redirectToSSO(request: NextRequest) {
-  const ssoUrl = process.env.NEXT_PUBLIC_SSO_URL || 'http://localhost:8000/api/v1';
+  const ssoUrl = process.env.NEXT_PUBLIC_SSO_API_URL || 'http://localhost:8000/api/v1';
   const clientId = process.env.NEXT_PUBLIC_CLIENT_ID || 'shelf360';
   const callbackUrl = process.env.NEXT_PUBLIC_CALLBACK_URL || 'http://localhost:3001/auth/callback';
 
