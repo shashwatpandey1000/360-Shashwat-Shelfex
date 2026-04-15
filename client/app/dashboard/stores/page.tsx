@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import {
@@ -42,6 +42,14 @@ interface StoreRow {
 }
 
 export default function StoresPage() {
+  return (
+    <Suspense>
+      <StoresContent />
+    </Suspense>
+  );
+}
+
+function StoresContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
