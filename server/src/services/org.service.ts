@@ -1,4 +1,4 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   organizations,
@@ -110,11 +110,7 @@ export async function registerOrg(input: RegisterOrgInput, ssoUserId: string, em
 
 // Get org by ID
 export async function getOrgById(orgId: string) {
-  const [org] = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.id, orgId))
-    .limit(1);
+  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
 
   return org || null;
 }
@@ -189,10 +185,7 @@ export async function getOrgSettings(orgId: string) {
 }
 
 // Update org settings
-export async function updateOrgSettings(
-  orgId: string,
-  data: Record<string, unknown>,
-) {
+export async function updateOrgSettings(orgId: string, data: Record<string, unknown>) {
   // Build the update object — only include fields that were provided
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
@@ -226,4 +219,59 @@ export async function findSuperAdmin(ssoUserId: string) {
     .limit(1);
 
   return admin || null;
+}
+
+// List active super admins who should receive onboarding approval notifications
+export async function listActiveSuperAdmins() {
+  return db
+    .select({
+      id: superAdmins.id,
+      email: superAdmins.email,
+      name: superAdmins.name,
+      ssoUserId: superAdmins.ssoUserId,
+    })
+    .from(superAdmins)
+    .where(eq(superAdmins.status, 'active'));
+}
+
+export async function recordApprovalNotificationAttempt(
+  orgId: string,
+  sent: boolean,
+  error?: string,
+) {
+  const now = new Date();
+  const [updated] = await db
+    .update(organizations)
+    .set({
+      approvalNotificationAttempts: sql`${organizations.approvalNotificationAttempts} + 1`,
+      approvalNotificationLastAttemptAt: now,
+      approvalNotificationSent: sent,
+      approvalNotificationSentAt: sent ? now : null,
+      approvalNotificationLastError: sent ? null : error || 'Unknown error',
+      updatedAt: now,
+    })
+    .where(eq(organizations.id, orgId))
+    .returning({ id: organizations.id });
+
+  return updated || null;
+}
+
+export async function listPendingOrgsNeedingApprovalNotification(limit = 100) {
+  return db
+    .select({
+      id: organizations.id,
+      name: organizations.name,
+      contactEmail: organizations.contactEmail,
+      createdAt: organizations.createdAt,
+      attempts: organizations.approvalNotificationAttempts,
+    })
+    .from(organizations)
+    .where(
+      and(
+        eq(organizations.status, 'pending_approval'),
+        eq(organizations.approvalNotificationSent, false),
+      ),
+    )
+    .orderBy(organizations.createdAt)
+    .limit(limit);
 }

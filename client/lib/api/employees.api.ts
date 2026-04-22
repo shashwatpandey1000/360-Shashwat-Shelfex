@@ -6,6 +6,7 @@ export interface EmployeeListParams {
   search?: string;
   roleTemplate?: 'org_manager' | 'zone_manager' | 'store_manager' | 'surveyor';
   status?: 'active' | 'inactive' | 'pending_first_login';
+  storeId?: string;
   sortBy?: 'name' | 'email' | 'createdAt' | 'roleTemplate';
   sortOrder?: 'asc' | 'desc';
 }

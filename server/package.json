@@ -6,11 +6,14 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "job:retry-approval-emails": "node dist/jobs/retryPendingApprovalEmails.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "ts-node-dev --transpile-only src/db/seed.ts"
+    "db:seed": "ts-node-dev --transpile-only src/db/seed.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -29,6 +32,7 @@
     "express-rate-limit": "^8.3.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
+    "libphonenumber-js": "^1.12.41",
     "morgan": "^1.10.1",
     "resend": "^6.10.0",
     "winston": "^3.18.3",

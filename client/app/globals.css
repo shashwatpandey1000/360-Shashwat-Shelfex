@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -46,6 +46,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-purple-hover: var(--brand-purple-hover);
+  --color-brand-purple-soft: var(--brand-purple-soft);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
 }
 
 :root {
@@ -81,6 +88,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --brand: #131313;
+  --brand-foreground: #ffffff;
+  --brand-purple: #8f00ee;
+  --brand-purple-hover: #4700cc;
+  --brand-purple-soft: #ede9fe;
+  --surface: #ffffff;
+  --surface-muted: #fafafa;
 }
 
 @layer base {
@@ -115,6 +129,32 @@
   display: none !important;
 }
 
+/* Sonner toasts — sharp corners, minimal styling */
+[data-sonner-toaster] {
+  --border-radius: 0px !important;
+}
+[data-sonner-toast] {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: var(--font-sans);
+}
+[data-sonner-toast] [data-close-button],
+[data-sonner-toast] [data-button] {
+  border-radius: 0 !important;
+}
+
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, rgb(17 17 17 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(17 17 17 / 0.07) 1px, transparent 1px);
+  background-size: 100px 100px;
+}
+.dark .grid-pattern {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.12) 1px, transparent 1px);
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -147,4 +187,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --brand: #ffffff;
+  --brand-foreground: #131313;
+  --brand-purple: #7c3aff;
+  --brand-purple-hover: #6425e6;
+  --brand-purple-soft: #2a1d52;
+  --surface: #0a0a0a;
+  --surface-muted: #131313;
 }

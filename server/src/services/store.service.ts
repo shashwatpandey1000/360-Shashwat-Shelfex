@@ -2,7 +2,11 @@ import { eq, and, or, ilike, sql, desc, asc, count } from 'drizzle-orm';
 import { db } from '../db';
 import { stores, users, storeCategories, zones } from '../db/schema';
 import type { AccessMap } from './accessMap.service';
-import type { CreateStoreInput, UpdateStoreInput, ListStoresQuery } from '../validations/store.validation';
+import type {
+  CreateStoreInput,
+  UpdateStoreInput,
+  ListStoresQuery,
+} from '../validations/store.validation';
 
 // Slug generation (reused pattern from org service)
 function generateSlug(name: string): string {
@@ -84,11 +88,7 @@ export async function createStore(orgId: string, input: CreateStoreInput) {
 }
 
 // List stores with search, filters, pagination, and data scope
-export async function listStores(
-  orgId: string,
-  accessMap: AccessMap,
-  query: ListStoresQuery,
-) {
+export async function listStores(orgId: string, accessMap: AccessMap, query: ListStoresQuery) {
   const { page, perPage, search, status, sortBy, sortOrder } = query;
   const offset = (page - 1) * perPage;
 
@@ -142,10 +142,7 @@ export async function listStores(
       .orderBy(orderFn(orderCol))
       .limit(perPage)
       .offset(offset),
-    db
-      .select({ total: count() })
-      .from(stores)
-      .where(where),
+    db.select({ total: count() }).from(stores).where(where),
   ]);
 
   return {

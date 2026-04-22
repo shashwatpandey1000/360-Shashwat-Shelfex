@@ -2,7 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
 import { ApiResponse } from '../utils/ApiResponse';
-import { buildAccessMap, findUserBySsoId, findUserByEmail, linkSsoAccount, AccessMap } from '../services/accessMap.service';
+import {
+  buildAccessMap,
+  findUserBySsoId,
+  findUserByEmail,
+  linkSsoAccount,
+  markFirstLogin,
+  AccessMap,
+} from '../services/accessMap.service';
 
 export interface AccessTokenPayload {
   userId: string;
@@ -16,6 +23,7 @@ declare global {
       user?: AccessTokenPayload;
       accessMap?: AccessMap;
       orgId?: string;
+      isFirstLogin?: boolean;
     }
   }
 }
@@ -53,19 +61,30 @@ export const authMiddleware = async (
 
     // Look up 360 user by SSO user ID
     let localUser = await findUserBySsoId(decoded.userId);
+    let linkedFromInvite = false;
 
     // Account linking: if no user found by sso_user_id, check if there's an
     // invited user (sso_user_id = null) with a matching email → link accounts
     if (!localUser) {
       const invitedUser = await findUserByEmail(decoded.email);
       if (invitedUser && !invitedUser.ssoUserId && invitedUser.status === 'pending_first_login') {
-        logger.info(`Linking SSO account ${decoded.userId} to invited user ${invitedUser.id} (${decoded.email})`);
+        logger.info(
+          `Linking SSO account ${decoded.userId} to invited user ${invitedUser.id} (${decoded.email})`,
+        );
         localUser = await linkSsoAccount(invitedUser.id, decoded.userId);
+        linkedFromInvite = !!localUser;
       }
     }
 
     // Build access map if user exists
     if (localUser) {
+      const isFirstLogin = linkedFromInvite || !localUser.lastLoginAt;
+      req.isFirstLogin = isFirstLogin;
+
+      if (isFirstLogin && !linkedFromInvite) {
+        await markFirstLogin(localUser.id);
+      }
+
       const accessMap = await buildAccessMap(localUser.id);
       if (accessMap) {
         req.accessMap = accessMap;

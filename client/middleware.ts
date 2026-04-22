@@ -41,16 +41,79 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('access_token')?.value;
 
   if (!accessToken) {
+    // No access token — try refreshing with refresh_token before redirecting to SSO
+    const refreshResult = await tryRefreshToken(request);
+    if (refreshResult) return refreshResult;
     return await redirectToSSO(request);
   }
 
   // Check if token is expired (decode without verification — verification happens server-side)
   const decoded = decodeJwtPayload(accessToken);
   if (!decoded || typeof decoded.exp !== 'number' || decoded.exp * 1000 < Date.now()) {
+    // Token expired — try refreshing with refresh_token before redirecting to SSO
+    const refreshResult = await tryRefreshToken(request);
+    if (refreshResult) return refreshResult;
     return await redirectToSSO(request);
   }
 
   return NextResponse.next();
+}
+
+async function tryRefreshToken(request: NextRequest): Promise<NextResponse | null> {
+  const refreshToken = request.cookies.get('refresh_token')?.value;
+  if (!refreshToken) return null;
+
+  // Optionally check if the refresh token itself is expired (30d JWT)
+  const decoded = decodeJwtPayload(refreshToken);
+  if (decoded && typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now()) {
+    return null; // Refresh token expired, no point trying
+  }
+
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+    const refreshResponse = await fetch(`${apiUrl}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `refresh_token=${refreshToken}`,
+      },
+    });
+
+    if (!refreshResponse.ok) return null;
+
+    const body = await refreshResponse.json();
+    const newAccessToken = body?.data?.accessToken;
+    if (!newAccessToken) return null;
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const response = NextResponse.next();
+
+    // Set the new access_token cookie on the client domain so subsequent
+    // middleware checks see a valid token without another refresh round-trip
+    response.cookies.set('access_token', newAccessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 60 * 60, // 1 hour (seconds)
+      path: '/',
+    });
+
+    // Rotate refresh token if the server issued a new one
+    const newRefreshToken = body?.data?.refreshToken;
+    if (newRefreshToken) {
+      response.cookies.set('refresh_token', newRefreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60, // 30 days (seconds)
+        path: '/',
+      });
+    }
+
+    return response;
+  } catch {
+    return null; // Refresh failed, fall through to SSO redirect
+  }
 }
 
 function generateCodeVerifier(): string {

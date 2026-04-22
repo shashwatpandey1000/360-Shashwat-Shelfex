@@ -13,7 +13,20 @@ const router = Router();
 router.post('/register', authMiddleware, validate(registerOrgSchema), register);
 
 // Protected (auth + org + permissions)
-router.get('/settings', authMiddleware, tenantContext, requirePermission('settings:read'), getSettings);
-router.patch('/settings', authMiddleware, tenantContext, requirePermission('settings:write'), validate(updateOrgSettingsSchema), updateSettings);
+router.get(
+  '/settings',
+  authMiddleware,
+  tenantContext,
+  requirePermission('settings:read'),
+  getSettings,
+);
+router.patch(
+  '/settings',
+  authMiddleware,
+  tenantContext,
+  requirePermission('settings:write'),
+  validate(updateOrgSettingsSchema),
+  updateSettings,
+);
 
 export default router;

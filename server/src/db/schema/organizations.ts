@@ -1,4 +1,14 @@
-import { pgTable, uuid, text, timestamp, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  jsonb,
+  index,
+  uniqueIndex,
+  boolean,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { industries } from './lookups';
 
 // Super Admins
@@ -36,12 +46,20 @@ export const organizations = pgTable(
     approvedAt: timestamp('approved_at', { withTimezone: true }),
     rejectedAt: timestamp('rejected_at', { withTimezone: true }),
     rejectionReason: text('rejection_reason'),
+    approvalNotificationSent: boolean('approval_notification_sent').notNull().default(false),
+    approvalNotificationAttempts: integer('approval_notification_attempts').notNull().default(0),
+    approvalNotificationLastAttemptAt: timestamp('approval_notification_last_attempt_at', {
+      withTimezone: true,
+    }),
+    approvalNotificationSentAt: timestamp('approval_notification_sent_at', { withTimezone: true }),
+    approvalNotificationLastError: text('approval_notification_last_error'),
     createdBy: uuid('created_by'), // sso_user_id of the person who registered
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index('organizations_status_idx').on(t.status),
+    index('organizations_status_notify_idx').on(t.status, t.approvalNotificationSent),
     index('organizations_country_idx').on(t.country),
   ],
 );

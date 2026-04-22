@@ -4,20 +4,36 @@ import logger from '../utils/logger';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM_EMAIL || 'no-reply@shelfexecution.com';
 
+export interface EmailSendResult {
+  ok: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+async function sendEmailTracked(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<EmailSendResult> {
+  try {
+    const res = await resend.emails.send({ from: FROM, to, subject, html });
+    if (res.error) {
+      logger.error(`Email failed to ${to}: ${res.error.message}`);
+      return { ok: false, error: res.error.message };
+    }
+
+    logger.info(`Email sent to ${to}: ${res.data?.id}`);
+    return { ok: true, messageId: res.data?.id };
+  } catch (err) {
+    const message = (err as Error).message;
+    logger.error(`Email send error to ${to}: ${message}`);
+    return { ok: false, error: message };
+  }
+}
+
 // Non-blocking email send — logs errors but never throws
 function sendEmail(to: string, subject: string, html: string) {
-  resend.emails
-    .send({ from: FROM, to, subject, html })
-    .then((res) => {
-      if (res.error) {
-        logger.error(`Email failed to ${to}: ${res.error.message}`);
-      } else {
-        logger.info(`Email sent to ${to}: ${res.data?.id}`);
-      }
-    })
-    .catch((err) => {
-      logger.error(`Email send error to ${to}: ${err.message}`);
-    });
+  void sendEmailTracked(to, subject, html);
 }
 
 // Employee invite email
@@ -82,4 +98,44 @@ export function sendOrgRejectedEmail(to: string, orgName: string, reason: string
     </div>
   `;
   sendEmail(to, subject, html);
+}
+
+// New org pending approval email (to super admins)
+export function sendOrgPendingApprovalEmail(
+  to: string,
+  orgName: string,
+  contactEmail: string,
+  createdAt: Date,
+  reviewUrl?: string,
+): Promise<EmailSendResult> {
+  const subject = `New organization pending approval: ${orgName}`;
+  const submittedAt = createdAt.toISOString();
+  const html = `
+    <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+      <h2 style="color: #131313;">New Organization Awaiting Approval</h2>
+      <p>A new organization has completed onboarding and is waiting for super admin review.</p>
+      <table style="border-collapse: collapse; width: 100%; margin: 12px 0;">
+        <tr>
+          <td style="padding: 6px 0; color: #666; width: 160px;">Organization</td>
+          <td style="padding: 6px 0;"><strong>${orgName}</strong></td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #666;">Contact email</td>
+          <td style="padding: 6px 0;">${contactEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #666;">Submitted at</td>
+          <td style="padding: 6px 0;">${submittedAt}</td>
+        </tr>
+      </table>
+      ${
+        reviewUrl
+          ? `<p style="margin-top: 16px;"><a href="${reviewUrl}" style="display: inline-block; background: #131313; color: white; padding: 10px 24px; text-decoration: none;">Review Pending Organizations</a></p>`
+          : ''
+      }
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="color: #999; font-size: 12px;">Shelf360 by ShelfExecution</p>
+    </div>
+  `;
+  return sendEmailTracked(to, subject, html);
 }

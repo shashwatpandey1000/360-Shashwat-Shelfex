@@ -36,8 +36,12 @@ export const scheduleTemplates = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index('sched_tmpl_org_active_idx').on(t.orgId).where(sql`${t.isActive} = true`),
-    index('sched_tmpl_org_store_idx').on(t.orgId, t.storeId).where(sql`${t.isActive} = true`),
+    index('sched_tmpl_org_active_idx')
+      .on(t.orgId)
+      .where(sql`${t.isActive} = true`),
+    index('sched_tmpl_org_store_idx')
+      .on(t.orgId, t.storeId)
+      .where(sql`${t.isActive} = true`),
     index('sched_tmpl_store_idx')
       .on(t.storeId)
       .where(sql`${t.storeId} IS NOT NULL AND ${t.isActive} = true`),

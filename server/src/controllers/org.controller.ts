@@ -1,8 +1,16 @@
 import { Request, Response } from 'express';
 import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
-import { registerOrg, getOrgSettings, updateOrgSettings } from '../services/org.service';
+import {
+  registerOrg,
+  getOrgSettings,
+  updateOrgSettings,
+  listActiveSuperAdmins,
+  recordApprovalNotificationAttempt,
+} from '../services/org.service';
 import { findUserBySsoId } from '../services/accessMap.service';
+import { sendOrgPendingApprovalEmail } from '../services/email.service';
+import logger from '../utils/logger';
 
 // POST /orgs/register — create org + first user (org_manager)
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -19,18 +27,58 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   const { org, user } = await registerOrg(req.body, req.user.userId, req.user.email);
 
-  ApiResponse.created(res, {
-    org: {
-      id: org.id,
-      name: org.name,
-      slug: org.slug,
-      status: org.status,
+  // Attempt super-admin notifications; onboarding success should not depend on email delivery.
+  try {
+    const superAdmins = await listActiveSuperAdmins();
+    if (superAdmins.length === 0) {
+      await recordApprovalNotificationAttempt(org.id, false, 'No active super admins configured');
+    } else {
+      const apiBaseUrl = `${req.protocol}://${req.get('host')}`;
+      const pendingOrgsUrl = `${apiBaseUrl}/api/v1/admin/orgs/pending`;
+      const results = await Promise.all(
+        superAdmins.map((admin) =>
+          sendOrgPendingApprovalEmail(
+            admin.email,
+            org.name,
+            org.contactEmail,
+            org.createdAt,
+            pendingOrgsUrl,
+          ),
+        ),
+      );
+
+      const sentToAny = results.some((r) => r.ok);
+      const error = sentToAny
+        ? undefined
+        : results
+            .map((r) => r.error)
+            .filter(Boolean)
+            .join(' | ') || 'All super-admin notification emails failed';
+
+      await recordApprovalNotificationAttempt(org.id, sentToAny, error);
+    }
+  } catch (err) {
+    logger.error(
+      `Failed to process approval notifications for org ${org.id}: ${(err as Error).message}`,
+    );
+  }
+
+  ApiResponse.created(
+    res,
+    {
+      org: {
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        status: org.status,
+      },
+      user: {
+        id: user.id,
+        roleTemplate: user.roleTemplate,
+      },
     },
-    user: {
-      id: user.id,
-      roleTemplate: user.roleTemplate,
-    },
-  }, 'Organization registered successfully. Pending approval.');
+    'Organization registered successfully. Pending approval.',
+  );
 });
 
 // GET /orgs/settings — get current org settings

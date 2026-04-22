@@ -18,15 +18,15 @@ export default function SectionCard({
   return (
     <div
       className={cn(
-        'border p-6',
-        variant === 'muted' ? 'bg-gray-50' : 'bg-white',
+        'border border-gray-200 p-6 dark:border-gray-800',
+        variant === 'muted' ? 'bg-gray-50 dark:bg-neutral-800' : 'bg-surface',
         className,
       )}
     >
       <h2
         className={cn(
           'mb-4 text-[14px] font-medium',
-          variant === 'muted' ? 'text-gray-600' : 'text-[#131313]',
+          variant === 'muted' ? 'text-gray-600 dark:text-gray-400' : 'text-brand',
         )}
       >
         {title}

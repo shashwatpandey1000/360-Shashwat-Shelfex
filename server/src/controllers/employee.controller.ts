@@ -21,7 +21,13 @@ import { getOrgSettings } from '../services/org.service';
 export const create = asyncHandler(async (req: Request, res: Response) => {
   try {
     const org = await getOrgSettings(req.orgId!);
-    const employee = await createEmployee(req.orgId!, req.body, req.accessMap!.userId, org?.name);
+    const employee = await createEmployee(
+      req.orgId!,
+      req.body,
+      req.accessMap!.userId,
+      req.accessMap!.roleTemplate,
+      org?.name,
+    );
     ApiResponse.created(res, employee, 'Employee invited');
   } catch (err: any) {
     ApiResponse.badRequest(res, err.message);
@@ -34,7 +40,7 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
 //   2. Controller: queries all users in org, applies search/filters/pagination
 export const list = asyncHandler(async (req: Request, res: Response) => {
   const query = listEmployeesSchema.parse(req.query);
-  const result = await listEmployees(req.orgId!, query);
+  const result = await listEmployees(req.orgId!, query, req.accessMap!);
   ApiResponse.success(res, result);
 });
 
@@ -44,7 +50,7 @@ export const list = asyncHandler(async (req: Request, res: Response) => {
 //   2. Controller: returns full user + permissions list + scope entity IDs
 export const detail = asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id as string;
-  const employee = await getEmployeeById(req.orgId!, id);
+  const employee = await getEmployeeById(req.orgId!, id, req.accessMap!);
 
   if (!employee) {
     ApiResponse.notFound(res, 'Employee not found');

@@ -10,6 +10,7 @@ import {
   OverlayViewF,
 } from '@react-google-maps/api';
 import { GOOGLE_MAPS_CONFIG } from '@/lib/google-maps';
+import { STORE_PIN_COLOR, STORE_PIN_PATH, storeMapStyles } from '@/lib/google-maps-styles';
 
 interface StoreRow {
   id: string;
@@ -29,23 +30,9 @@ interface MapViewProps {
 const containerStyle = { width: '100%', height: '100%' };
 const defaultCenter = { lat: 28.6139, lng: 77.209 };
 
-const mapStyles = [
-  { featureType: 'poi', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#f7f7f7' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#d0e3b4' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#bde6ab' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#ffe15f' }] },
-  { featureType: 'road.arterial', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'road.local', elementType: 'geometry.fill', stylers: [{ color: 'black' }] },
-  { featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: '#aadaff' }] },
-];
-
 const customIcon = {
-  path: 'M -16 -16 L 16 -16 L 16 16 L 4 16 L 0 22 L -4 16 L -16 16 Z',
-  fillColor: '#a121c2',
+  path: STORE_PIN_PATH,
+  fillColor: STORE_PIN_COLOR,
   fillOpacity: 1,
   strokeWeight: 2,
   strokeColor: 'white',
@@ -109,8 +96,26 @@ const MapView = ({ data, isLoading }: MapViewProps) => {
 
   if (storesWithLocation.length === 0) {
     return (
-      <div className="mt-2 flex h-[70vh] w-full items-center justify-center bg-gray-100">
-        <p className="text-sm text-gray-500">No stores with location data to display on map.</p>
+      <div className="relative mt-2 h-[70vh] w-full overflow-hidden bg-gray-100">
+        <div className="absolute inset-0 blur-[5px]">
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={defaultCenter}
+            zoom={12}
+            options={{
+              disableDefaultUI: true,
+              gestureHandling: 'none',
+              keyboardShortcuts: false,
+              clickableIcons: false,
+              styles: storeMapStyles,
+            }}
+          />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/40">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            No stores to show on the map.
+          </p>
+        </div>
       </div>
     );
   }
@@ -130,7 +135,7 @@ const MapView = ({ data, isLoading }: MapViewProps) => {
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: true,
-          styles: mapStyles,
+          styles: storeMapStyles,
           gestureHandling: 'cooperative',
         }}
       >
@@ -156,9 +161,9 @@ const MapView = ({ data, isLoading }: MapViewProps) => {
                 >
                   <div className="flex w-64 flex-col border-x border-t border-white bg-black p-4 text-white shadow-xl">
                     <div className="flex gap-2">
-                      <h3 className="mb-2 text-base font-bold leading-tight">{store.name}</h3>
+                      <h3 className="mb-2 text-base leading-tight font-bold">{store.name}</h3>
                       <span
-                        className={`inline-block h-max px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        className={`inline-block h-max px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${
                           store.status === 'active'
                             ? 'bg-green-500 text-black'
                             : store.status === 'pending_tour'

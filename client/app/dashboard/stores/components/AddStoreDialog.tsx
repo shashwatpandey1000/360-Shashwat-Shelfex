@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CustomInput } from '@/components/common/input';
+import { CustomButton } from '@/components/common/button';
 import AddressSummary from '@/components/common/AddressSummary';
 import { lookupsApi } from '@/lib/api/lookups.api';
 import { storesApi } from '@/lib/api/stores.api';
@@ -34,13 +35,20 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
   const [addressData, setAddressData] = useState<AddressData | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactPhoneError, setContactPhoneError] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [timezone, setTimezone] = useState('');
 
   // Manager search (existing employees only)
   const [managerSearch, setManagerSearch] = useState('');
-  const [managerResults, setManagerResults] = useState<{ id: string; name: string | null; email: string }[]>([]);
-  const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [managerResults, setManagerResults] = useState<
+    { id: string; name: string | null; email: string }[]
+  >([]);
+  const [selectedManager, setSelectedManager] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
   const [showManagerSearch, setShowManagerSearch] = useState(false);
 
   useEffect(() => {
@@ -58,8 +66,12 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
     const timer = setTimeout(async () => {
       try {
         const res = await employeesApi.list({ perPage: 10, search: managerSearch });
-        setManagerResults(res.data.data.map((e: any) => ({ id: e.id, name: e.name, email: e.email })));
-      } catch { /* ignore */ }
+        setManagerResults(
+          res.data.data.map((e: any) => ({ id: e.id, name: e.name, email: e.email })),
+        );
+      } catch {
+        /* ignore */
+      }
     }, 300);
     return () => clearTimeout(timer);
   }, [managerSearch, showManagerSearch]);
@@ -69,6 +81,7 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
     setAddressData(null);
     setCategoryId('');
     setContactPhone('');
+    setContactPhoneError('');
     setContactEmail('');
     setTimezone('');
     setManagerSearch('');
@@ -93,7 +106,9 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
           country: addressData?.country || undefined,
           formattedAddress: addressData?.formattedAddress || undefined,
         },
-        location: addressData?.lat ? { latitude: addressData.lat, longitude: addressData.lng } : undefined,
+        location: addressData?.lat
+          ? { latitude: addressData.lat, longitude: addressData.lng }
+          : undefined,
         categoryId: categoryId || undefined,
         contactPhone: contactPhone || undefined,
         contactEmail: contactEmail || undefined,
@@ -105,7 +120,9 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
         try {
           await employeesApi.assignStoreManager(storeRes.data.id, selectedManager.id);
         } catch (err: any) {
-          toast.error(`Store created but manager assignment failed: ${err.response?.data?.message || err.message}`);
+          toast.error(
+            `Store created but manager assignment failed: ${err.response?.data?.message || err.message}`,
+          );
         }
       }
 
@@ -121,7 +138,13 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) reset();
+      }}
+    >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[520px]">
         <DialogHeader>
@@ -153,36 +176,37 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
             onChange={(e) => setTimezone(e.target.value)}
             placeholder="Asia/Kolkata"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <CustomInput.Text
-              label="Phone"
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="+91 9876543210"
-            />
-            <CustomInput.Text
-              label="Email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              placeholder="store@example.com"
-            />
-          </div>
+          <CustomInput.Phone
+            label="Phone"
+            value={contactPhone}
+            onChange={setContactPhone}
+            onValidate={(err) => setContactPhoneError(err ?? '')}
+            error={contactPhoneError}
+          />
+          <CustomInput.Text
+            label="Email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            placeholder="store@example.com"
+          />
 
           {/* Manager — pick existing employee only */}
           <div>
-            <label className="mb-2 block text-[14px] font-medium leading-5 text-[#131313]">
+            <label className="text-brand mb-2 block text-[14px] leading-5 font-medium">
               Store Manager (optional)
             </label>
             {selectedManager ? (
-              <div className="flex items-center justify-between border bg-gray-50 px-3 py-2 text-sm">
-                <div>
-                  <span className="font-medium">{selectedManager.name}</span>
-                  <span className="ml-2 text-gray-500">{selectedManager.email}</span>
+              <div className="bg-surface flex items-center justify-between border border-gray-300 text-sm dark:border-gray-800">
+                <div className="flex-1 px-3 py-2">
+                  <span className="text-brand font-medium">{selectedManager.name}</span>
+                  <span className="ml-2 text-gray-500 dark:text-gray-400">
+                    {selectedManager.email}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedManager(null)}
-                  className="text-gray-400 hover:text-black"
+                  className="flex aspect-square h-full px-3 items-center justify-center self-stretch text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 >
                   <X size={14} />
                 </button>
@@ -191,65 +215,75 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-none border px-3 py-1.5 text-xs text-gray-700 hover:border-black hover:bg-gray-200"
+                className="w-full rounded-none border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:border-brand hover:bg-gray-200 dark:border-gray-800 dark:text-gray-300 dark:hover:border-white dark:hover:bg-neutral-800"
                 onClick={() => setShowManagerSearch(true)}
               >
                 Assign Existing Employee
               </Button>
             ) : (
               <div>
-                <div className="mb-1 flex items-center gap-2">
+                <div className="focus-within:border-brand hover:border-brand dark:focus-within:border-brand dark:hover:border-brand relative mb-1 flex items-stretch border border-gray-300 dark:border-gray-800">
                   <input
                     type="text"
                     value={managerSearch}
                     onChange={(e) => setManagerSearch(e.target.value)}
                     placeholder="Search employees by name or email..."
-                    className="flex w-full rounded-none border bg-white px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400 hover:border-black focus:border-black focus:outline-none"
+                    className="bg-surface dark:bg-surface-muted flex w-full px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-500"
                   />
                   <button
                     type="button"
-                    onClick={() => { setShowManagerSearch(false); setManagerSearch(''); setManagerResults([]); }}
-                    className="text-gray-400 hover:text-black"
+                    onClick={() => {
+                      setShowManagerSearch(false);
+                      setManagerSearch('');
+                      setManagerResults([]);
+                    }}
+                    className="flex aspect-square items-center justify-center px-3 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                   >
                     <X size={14} />
                   </button>
                 </div>
                 {managerResults.length > 0 && (
-                  <div className="max-h-32 overflow-y-auto border bg-white">
+                  <div className="bg-surface dark:bg-surface-muted max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-800">
                     {managerResults.map((emp) => (
                       <button
                         key={emp.id}
                         type="button"
                         onClick={() => {
-                          setSelectedManager({ id: emp.id, name: emp.name || emp.email, email: emp.email });
+                          setSelectedManager({
+                            id: emp.id,
+                            name: emp.name || emp.email,
+                            email: emp.email,
+                          });
                           setShowManagerSearch(false);
                           setManagerSearch('');
                           setManagerResults([]);
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-100"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-800"
                       >
                         <span className="font-medium">{emp.name || emp.email}</span>
-                        {emp.name && <span className="text-xs text-gray-400">{emp.email}</span>}
+                        {emp.name && (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {emp.email}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
                 )}
                 {managerSearch.length >= 2 && managerResults.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-400">No employees found. Create the employee first from the Employees page.</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    No employees found. Create the employee first from the Employees page.
+                  </p>
                 )}
               </div>
             )}
           </div>
         </div>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" className="rounded-none" onClick={() => setOpen(false)}>
+          <CustomButton variant="secondary" size="sm" onClick={() => setOpen(false)}>
             Cancel
-          </Button>
-          <Button
-            className="rounded-none"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-          >
+          </CustomButton>
+          <CustomButton size="sm" onClick={handleSubmit} disabled={!canSubmit || submitting}>
             {submitting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
@@ -258,7 +292,7 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
             ) : (
               'Create Store'
             )}
-          </Button>
+          </CustomButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

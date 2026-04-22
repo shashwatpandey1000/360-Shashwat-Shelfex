@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, desc, asc, count, isNull } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, asc, count, isNull, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import {
   users,
@@ -9,10 +9,61 @@ import {
   stores,
 } from '../db/schema';
 import { sendEmployeeInviteEmail } from './email.service';
-import type { CreateEmployeeInput, UpdateEmployeeInput, ListEmployeesQuery } from '../validations/employee.validation';
+import type { AccessMap } from './accessMap.service';
+import type {
+  CreateEmployeeInput,
+  UpdateEmployeeInput,
+  ListEmployeesQuery,
+} from '../validations/employee.validation';
+
+// Role hierarchy: which roles a given caller roleTemplate is allowed to create
+const CREATABLE_ROLES: Record<string, string[]> = {
+  org_manager: ['org_manager', 'zone_manager', 'store_manager', 'surveyor'],
+  zone_manager: ['store_manager', 'surveyor'],
+  store_manager: ['surveyor'],
+  surveyor: [],
+};
 
 // Create an employee (invited user — sso_user_id = null until they register on SSO)
-export async function createEmployee(orgId: string, input: CreateEmployeeInput, createdBy: string, orgName?: string) {
+export async function createEmployee(
+  orgId: string,
+  input: CreateEmployeeInput,
+  createdBy: string,
+  callerRoleTemplate: string,
+  orgName?: string,
+) {
+  // Enforce role hierarchy — prevent privilege escalation
+  const allowed = CREATABLE_ROLES[callerRoleTemplate] ?? [];
+  if (!allowed.includes(input.roleTemplate)) {
+    throw new Error(
+      `A ${callerRoleTemplate} cannot create a user with role ${input.roleTemplate}`,
+    );
+  }
+
+  // Enforce scope bounds — caller cannot grant broader scope than their own
+  // org_manager can grant any scope; zone/store managers cannot grant org-wide access
+  if (callerRoleTemplate === 'store_manager') {
+    if (input.scopeType !== 'stores') {
+      throw new Error('Store managers can only invite users with store-level scope');
+    }
+    // Validate that all store IDs being granted are within the caller's own stores
+    if (input.scopeEntityIds && input.scopeEntityIds.length > 0) {
+      const callerUser = await db
+        .select({ scopeEntityId: userDataScopes.scopeEntityId })
+        .from(userDataScopes)
+        .where(eq(userDataScopes.userId, createdBy));
+      const callerStoreIds = new Set(callerUser.map((r) => r.scopeEntityId));
+      const outOfScope = input.scopeEntityIds.filter((id) => !callerStoreIds.has(id));
+      if (outOfScope.length > 0) {
+        throw new Error('You can only assign stores within your own scope');
+      }
+    }
+  } else if (callerRoleTemplate === 'zone_manager') {
+    if (input.scopeType === 'org') {
+      throw new Error('Zone managers cannot grant organization-wide access');
+    }
+  }
+
   // Check if email already exists in this org
   const [existing] = await db
     .select({ id: users.id })
@@ -79,17 +130,83 @@ export async function createEmployee(orgId: string, input: CreateEmployeeInput, 
   // Send invite email (non-blocking)
   const ssoUrl = process.env.SSO_FRONTEND_URL || 'https://sso-front-zeta.vercel.app';
   const roleName = template.displayName;
-  sendEmployeeInviteEmail(input.email, input.name, orgName || 'your organization', roleName, ssoUrl);
+  sendEmployeeInviteEmail(
+    input.email,
+    input.name,
+    orgName || 'your organization',
+    roleName,
+    ssoUrl,
+  );
 
   return user;
 }
 
-// List employees with search, filters, pagination
-export async function listEmployees(orgId: string, query: ListEmployeesQuery) {
-  const { page, perPage, search, roleTemplate, status, sortBy, sortOrder } = query;
+// List employees with search, filters, pagination — scoped by access map
+export async function listEmployees(orgId: string, query: ListEmployeesQuery, accessMap: AccessMap) {
+  const { page, perPage, search, roleTemplate, status, storeId, sortBy, sortOrder } = query;
   const offset = (page - 1) * perPage;
 
   const conditions = [eq(users.orgId, orgId)];
+
+  // If a specific storeId filter is provided, only return employees scoped to that store
+  if (storeId) {
+    const storeUserRows = await db
+      .select({ userId: userDataScopes.userId })
+      .from(userDataScopes)
+      .where(eq(userDataScopes.scopeEntityId, storeId));
+    const storeUserIds = storeUserRows.map((r) => r.userId);
+    // Also include the store manager (who may have org scope and not appear in user_data_scopes)
+    const [storeRecord] = await db
+      .select({ managerId: stores.managerId })
+      .from(stores)
+      .where(and(eq(stores.orgId, orgId), eq(stores.id, storeId)))
+      .limit(1);
+    if (storeRecord?.managerId && !storeUserIds.includes(storeRecord.managerId)) {
+      storeUserIds.push(storeRecord.managerId);
+    }
+    if (storeUserIds.length > 0) {
+      conditions.push(inArray(users.id, storeUserIds));
+    } else {
+      // No employees scoped to this store — return empty
+      return { data: [], total: 0, page, perPage, totalPages: 0 };
+    }
+  }
+
+  // Data scope: store-scoped users only see employees who share at least one of their stores
+  if (accessMap.scopeType === 'stores' && accessMap.dataScope.storeIds?.length) {
+    const storeIds = accessMap.dataScope.storeIds;
+    // Get user IDs who have any of these stores in their data scopes
+    const scopedUserRows = await db
+      .select({ userId: userDataScopes.userId })
+      .from(userDataScopes)
+      .where(inArray(userDataScopes.scopeEntityId, storeIds));
+    const scopedUserIds = [...new Set(scopedUserRows.map((r) => r.userId))];
+    // Also include the requesting user themselves
+    if (!scopedUserIds.includes(accessMap.userId)) scopedUserIds.push(accessMap.userId);
+    if (scopedUserIds.length > 0) {
+      conditions.push(inArray(users.id, scopedUserIds));
+    }
+  } else if (accessMap.scopeType === 'zones' && accessMap.dataScope.zoneIds?.length) {
+    const zoneIds = accessMap.dataScope.zoneIds;
+    // Get stores in these zones, then get users scoped to those stores
+    const zoneStores = await db
+      .select({ id: stores.id })
+      .from(stores)
+      .where(and(eq(stores.orgId, orgId), inArray(stores.zoneId, zoneIds)));
+    const zoneStoreIds = zoneStores.map((s) => s.id);
+    if (zoneStoreIds.length > 0) {
+      const scopedUserRows = await db
+        .select({ userId: userDataScopes.userId })
+        .from(userDataScopes)
+        .where(inArray(userDataScopes.scopeEntityId, zoneStoreIds));
+      const scopedUserIds = [...new Set(scopedUserRows.map((r) => r.userId))];
+      if (!scopedUserIds.includes(accessMap.userId)) scopedUserIds.push(accessMap.userId);
+      if (scopedUserIds.length > 0) {
+        conditions.push(inArray(users.id, scopedUserIds));
+      }
+    }
+  }
+  // org scope → no additional filter, sees all employees in org
 
   if (roleTemplate) {
     conditions.push(eq(users.roleTemplate, roleTemplate));
@@ -100,12 +217,7 @@ export async function listEmployees(orgId: string, query: ListEmployeesQuery) {
   }
 
   if (search) {
-    conditions.push(
-      or(
-        ilike(users.name, `%${search}%`),
-        ilike(users.email, `%${search}%`),
-      )!,
-    );
+    conditions.push(or(ilike(users.name, `%${search}%`), ilike(users.email, `%${search}%`))!);
   }
 
   const where = and(...conditions);
@@ -149,8 +261,8 @@ export async function listEmployees(orgId: string, query: ListEmployeesQuery) {
   };
 }
 
-// Get employee by ID (with permissions + scopes)
-export async function getEmployeeById(orgId: string, employeeId: string) {
+// Get employee by ID (with permissions + scopes) — scoped by access map
+export async function getEmployeeById(orgId: string, employeeId: string, accessMap?: AccessMap) {
   const [user] = await db
     .select()
     .from(users)
@@ -158,6 +270,33 @@ export async function getEmployeeById(orgId: string, employeeId: string) {
     .limit(1);
 
   if (!user) return null;
+
+  // Scope check: store/zone managers can only view employees in their scope
+  if (accessMap && accessMap.scopeType !== 'org') {
+    // Always allow viewing yourself
+    if (user.id !== accessMap.userId) {
+      const targetScopes = await db
+        .select({ scopeEntityId: userDataScopes.scopeEntityId })
+        .from(userDataScopes)
+        .where(eq(userDataScopes.userId, employeeId));
+      const targetScopeIds = targetScopes.map((s) => s.scopeEntityId);
+
+      let hasOverlap = false;
+      if (accessMap.scopeType === 'stores' && accessMap.dataScope.storeIds?.length) {
+        hasOverlap = targetScopeIds.some((id) => accessMap.dataScope.storeIds!.includes(id));
+      } else if (accessMap.scopeType === 'zones' && accessMap.dataScope.zoneIds?.length) {
+        // Resolve zone store IDs
+        const zoneStores = await db
+          .select({ id: stores.id })
+          .from(stores)
+          .where(and(eq(stores.orgId, orgId), inArray(stores.zoneId, accessMap.dataScope.zoneIds)));
+        const zoneStoreIds = zoneStores.map((s) => s.id);
+        hasOverlap = targetScopeIds.some((id) => zoneStoreIds.includes(id));
+      }
+
+      if (!hasOverlap) return null;
+    }
+  }
 
   const perms = await db
     .select({ permission: userPermissions.permission })
@@ -177,7 +316,11 @@ export async function getEmployeeById(orgId: string, employeeId: string) {
 }
 
 // Update employee (role, scope, basic info)
-export async function updateEmployee(orgId: string, employeeId: string, input: UpdateEmployeeInput) {
+export async function updateEmployee(
+  orgId: string,
+  employeeId: string,
+  input: UpdateEmployeeInput,
+) {
   const [existing] = await db
     .select()
     .from(users)

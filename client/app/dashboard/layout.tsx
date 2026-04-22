@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   CalendarDays,
   ClipboardList,
@@ -10,62 +10,58 @@ import {
   Settings,
   Store,
   Users,
-} from "lucide-react";
-import React, { createContext, useContext, useMemo, useState } from "react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { UserAvatar } from "@/components/common/user-avatar";
-import { useAuth } from "@/contexts/auth-context";
+} from 'lucide-react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { UserAvatar } from '@/components/common/user-avatar';
+import { ThemeToggle } from '@/components/common/theme-toggle';
+import { useAuth } from '@/contexts/auth-context';
 
 // All possible sidebar items — filtered by access map at render time
 const ALL_SIDEBAR_ITEMS = [
   {
-    module: "dashboard",
-    label: "Dashboard",
-    href: "/dashboard",
+    module: 'dashboard',
+    label: 'Dashboard',
+    href: '/dashboard',
     icon: <LayoutDashboard size={18} />,
-    group: "Main",
+    group: 'Main',
   },
   {
-    module: "stores",
-    label: "Stores",
-    href: "/dashboard/stores",
+    module: 'stores',
+    label: 'Stores',
+    href: '/dashboard/stores',
     icon: <Store size={18} />,
-    group: "Main",
+    group: 'Main',
   },
   {
-    module: "surveys",
-    label: "Surveys",
-    href: "/dashboard/surveys",
+    module: 'surveys',
+    label: 'Surveys',
+    href: '/dashboard/surveys',
     icon: <ClipboardList size={18} />,
-    group: "Main",
+    group: 'Main',
   },
   {
-    module: "employees",
-    label: "Employees",
-    href: "/dashboard/employees",
+    module: 'employees',
+    label: 'Employees',
+    href: '/dashboard/employees',
     icon: <Users size={18} />,
-    group: "Management",
+    group: 'Management',
   },
   {
-    module: "schedule",
-    label: "Schedule",
-    href: "/dashboard/schedule",
+    module: 'schedule',
+    label: 'Schedule',
+    href: '/dashboard/schedule',
     icon: <CalendarDays size={18} />,
-    group: "Management",
+    group: 'Management',
   },
   {
-    module: "settings",
-    label: "Settings",
-    href: "/dashboard/settings",
+    module: 'settings',
+    label: 'Settings',
+    href: '/dashboard/settings',
     icon: <Settings size={18} />,
-    group: "Management",
+    group: 'Management',
   },
 ];
 
@@ -81,11 +77,7 @@ const SidebarContext = createContext<{
 
 const useSidebar = () => useContext(SidebarContext);
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const toggle = () => setCollapsed((prev) => !prev);
   const closeSidebar = () => setCollapsed(true);
@@ -107,33 +99,26 @@ const Header = () => {
   const { collapsed, toggle } = useSidebar();
 
   return (
-    <header className="flex h-[55px] w-full items-center border-b bg-white">
+    <header className="bg-surface text-brand flex h-[55px] w-full items-center border-b">
       <div
         className={`h-full border-r transition-all duration-300 ${
-          collapsed ? "w-[75px]" : "w-[265px]"
+          collapsed ? 'w-[65px]' : 'w-[265px]'
         }`}
       >
         <div className="flex h-full items-center">
           <Button
             variant="ghost"
             onClick={toggle}
-            className={`h-full w-[calc(75px-1px)] rounded-none p-0 shadow-none ${collapsed ? "" : "border-r"}`}
+            className={`h-full w-[calc(65px-1px)] rounded-none p-0 shadow-none ${collapsed ? '' : 'border-r'}`}
           >
-            {collapsed ? (
-              <PanelRightClose size={24} />
-            ) : (
-              <PanelRightOpen size={24} />
-            )}
+            {collapsed ? <PanelRightClose size={24} /> : <PanelRightOpen size={24} />}
           </Button>
-          {!collapsed && (
-            <span className="ml-3 text-[15px] font-semibold text-[#131313]">
-              
-            </span>
-          )}
+          {!collapsed && <span className="text-brand ml-3 text-[15px] font-semibold"></span>}
         </div>
       </div>
 
-      <div className="flex h-full flex-1 items-center justify-end">
+      <div className="flex h-full flex-1 items-stretch justify-end">
+        <ThemeToggle />
         <UserAvatar />
       </div>
     </header>
@@ -150,7 +135,6 @@ const Sidebar = () => {
     return ALL_SIDEBAR_ITEMS.filter((item) => hasModule(item.module));
   }, [hasModule]);
 
-  // Group visible items
   const groups = useMemo(() => {
     const grouped: Record<string, typeof visibleItems> = {};
     for (const item of visibleItems) {
@@ -162,8 +146,8 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`flex h-[calc(100vh-55px)] flex-col overflow-y-auto border-r bg-[#fafafa] p-3 transition-all duration-300 ${
-        collapsed ? "w-[75px]" : "w-[265px]"
+      className={`bg-surface-muted flex h-[calc(100vh-55px)] flex-col overflow-y-auto border-r p-3 transition-all duration-300 ${
+        collapsed ? 'w-[65px]' : 'w-[265px]'
       }`}
     >
       <div className="flex flex-1 flex-col space-y-1">
@@ -172,7 +156,7 @@ const Sidebar = () => {
             <GroupName
               collapsed={collapsed}
               label={groupLabel}
-              className={groupIndex > 0 ? "mt-4" : ""}
+              className={groupIndex > 0 ? 'mt-4' : ''}
             />
             {items.map((item) => (
               <SideBarItem
@@ -192,9 +176,7 @@ const Sidebar = () => {
   );
 };
 
-const SidebarSeparator = () => (
-  <div className="my-2 h-px w-full bg-gray-200" />
-);
+const SidebarSeparator = () => <div className="my-2 h-px w-full bg-gray-200 dark:bg-gray-800" />;
 
 const GroupName = ({
   collapsed,
@@ -208,7 +190,7 @@ const GroupName = ({
   if (collapsed) return <div className="my-1.5 border-t first:border-none"></div>;
   return (
     <div
-      className={`mb-1.5 px-2 font-mono text-[11px] font-light uppercase text-gray-500 ${className}`}
+      className={`mb-1.5 px-2 font-mono text-[11px] font-light text-gray-500 uppercase ${className}`}
     >
       {label}
     </div>
@@ -233,12 +215,12 @@ const SideBarItem = ({
       href={href}
       onClick={closeSidebar}
       className={`group flex h-9 items-center ${
-        collapsed ? "justify-center" : "justify-start"
-      } ${isSelected ? "bg-[#1b1b1b]" : "hover:bg-gray-200/70"}`}
+        collapsed ? 'justify-center' : 'justify-start'
+      } ${isSelected ? 'bg-brand-purple' : 'hover:bg-gray-200/70 dark:hover:bg-gray-800/60'}`}
     >
       <div
         className={`flex aspect-square h-full items-center justify-center p-1.5 ${
-          isSelected ? "text-white" : "text-gray-500"
+          isSelected ? 'text-white' : 'text-gray-500 dark:text-gray-400'
         }`}
       >
         {icon}
@@ -246,7 +228,7 @@ const SideBarItem = ({
       {!collapsed && (
         <div
           className={`ml-2 text-[14px] group-hover:underline ${
-            isSelected ? "font-medium text-white" : "text-gray-800"
+            isSelected ? 'font-medium text-white' : 'text-gray-800 dark:text-gray-200'
           }`}
         >
           {label}

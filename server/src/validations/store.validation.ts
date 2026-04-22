@@ -20,7 +20,9 @@ export const createStoreSchema = z.object({
   timezone: z.string().optional(),
   contactPhone: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal('')),
-  operatingHours: z.record(z.string(), z.object({ open: z.string(), close: z.string() })).optional(),
+  operatingHours: z
+    .record(z.string(), z.object({ open: z.string(), close: z.string() }))
+    .optional(),
 });
 
 export type CreateStoreInput = z.infer<typeof createStoreSchema>;
@@ -48,7 +50,9 @@ export const updateStoreSchema = z.object({
   timezone: z.string().optional(),
   contactPhone: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal('')),
-  operatingHours: z.record(z.string(), z.object({ open: z.string(), close: z.string() })).optional(),
+  operatingHours: z
+    .record(z.string(), z.object({ open: z.string(), close: z.string() }))
+    .optional(),
 });
 
 export type UpdateStoreInput = z.infer<typeof updateStoreSchema>;

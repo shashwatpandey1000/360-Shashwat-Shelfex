@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/contexts/auth-context";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from '@/contexts/auth-context';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { LogOut } from 'lucide-react';
 
 export function UserAvatar() {
   const { user, logout, isLoading } = useAuth();
@@ -26,7 +26,7 @@ export function UserAvatar() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="cursor-pointer aspect-square h-full p-2 focus:outline-none">
+        <button className="aspect-square h-full cursor-pointer p-2 focus:outline-none">
           <Avatar className="h-full w-full cursor-pointer">
             <AvatarFallback className="rounded-none bg-linear-to-br from-blue-500 to-purple-600 text-sm font-medium text-white">
               {getInitials()}

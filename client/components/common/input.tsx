@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { formatPhoneInput, validatePhone } from '@/lib/phone';
 
 interface BaseInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -12,16 +13,19 @@ interface BaseInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const inputBaseStyles = (hasError: boolean) =>
   cn(
-    "flex w-full bg-white px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400",
-    "border transition-all duration-200",
-    "hover:border-black focus:outline-none focus:border-black",
-    "disabled:cursor-not-allowed disabled:opacity-50",
-    "rounded-none",
-    hasError ? "border-red-500" : ""
+    'flex w-full px-3 py-2 text-[14px] rounded-none',
+    'bg-surface text-gray-900 placeholder:text-gray-400',
+    'dark:bg-surface-muted dark:text-gray-100 dark:placeholder:text-gray-500',
+    'border transition-all duration-200',
+    hasError
+      ? 'border-red-500'
+      : 'border-gray-300 dark:border-gray-800 hover:border-brand focus:border-brand',
+    'focus:outline-none',
+    'disabled:cursor-not-allowed disabled:opacity-50',
   );
 
-const labelStyles = "mb-2 block text-[14px] leading-5 font-medium text-[#131313]";
-const errorStyles = "mt-1 text-xs text-red-500";
+const labelStyles = 'mb-2 block text-[14px] leading-5 font-medium text-brand';
+const errorStyles = 'mt-1 text-xs text-red-500';
 
 const TextInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
   ({ className, containerClassName, label, error, id, ...props }, ref) => {
@@ -29,7 +33,7 @@ const TextInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className={cn("relative w-full", containerClassName)}>
+      <div className={cn('relative w-full', containerClassName)}>
         {label && (
           <label htmlFor={inputId} className={labelStyles}>
             {label}
@@ -44,9 +48,9 @@ const TextInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
         {error && <p className={errorStyles}>{error}</p>}
       </div>
     );
-  }
+  },
 );
-TextInput.displayName = "CustomInput.Text";
+TextInput.displayName = 'CustomInput.Text';
 
 const PasswordInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
   ({ className, containerClassName, label, error, id, ...props }, ref) => {
@@ -55,7 +59,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className={cn("relative w-full", containerClassName)}>
+      <div className={cn('relative w-full', containerClassName)}>
         {label && (
           <label htmlFor={inputId} className={labelStyles}>
             {label}
@@ -65,7 +69,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
           <input
             ref={ref}
             id={inputId}
-            type={showPassword ? "text" : "password"}
+            type={showPassword ? 'text' : 'password'}
             className={cn(inputBaseStyles(!!error), className)}
             {...props}
           />
@@ -85,11 +89,11 @@ const PasswordInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
         {error && <p className={errorStyles}>{error}</p>}
       </div>
     );
-  }
+  },
 );
-PasswordInput.displayName = "CustomInput.Password";
+PasswordInput.displayName = 'CustomInput.Password';
 
-interface CheckboxProps extends Omit<BaseInputProps, "value" | "label"> {
+interface CheckboxProps extends Omit<BaseInputProps, 'value' | 'label'> {
   label: React.ReactNode;
 }
 
@@ -99,31 +103,28 @@ const CheckboxInput = React.forwardRef<HTMLInputElement, CheckboxProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className={cn("flex flex-col", containerClassName)}>
+      <div className={cn('flex flex-col', containerClassName)}>
         <div className="flex items-center gap-2">
           <input
             ref={ref}
             id={inputId}
             type="checkbox"
             className={cn(
-              "h-4 w-4 cursor-pointer rounded-none border-gray-300 text-black focus:ring-black",
-              className
+              'h-4 w-4 cursor-pointer rounded-none border-gray-300 text-black focus:ring-black',
+              className,
             )}
             {...props}
           />
-          <label
-            htmlFor={inputId}
-            className="cursor-pointer text-[14px] text-[#131313] select-none"
-          >
+          <label htmlFor={inputId} className="text-brand cursor-pointer text-[14px] select-none">
             {label}
           </label>
         </div>
         {error && <p className={errorStyles}>{error}</p>}
       </div>
     );
-  }
+  },
 );
-CheckboxInput.displayName = "CustomInput.Checkbox";
+CheckboxInput.displayName = 'CustomInput.Checkbox';
 
 interface SelectInputProps {
   label?: string;
@@ -144,37 +145,148 @@ const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className={cn("relative w-full", containerClassName)}>
+      <div className={cn('relative w-full', containerClassName)}>
         {label && (
           <label htmlFor={inputId} className={labelStyles}>
             {label}
           </label>
         )}
-        <select
-          ref={ref}
-          id={inputId}
-          className={cn(inputBaseStyles(!!error), className)}
-          {...props}
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            ref={ref}
+            id={inputId}
+            className={cn(inputBaseStyles(!!error), 'appearance-none pr-10', className)}
+            {...props}
+          >
+            {placeholder && <option value="">{placeholder}</option>}
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+          />
+        </div>
         {error && <p className={errorStyles}>{error}</p>}
       </div>
     );
-  }
+  },
 );
-SelectInput.displayName = "CustomInput.Select";
+SelectInput.displayName = 'CustomInput.Select';
+
+interface OptionGroupProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string; description?: string }[];
+  error?: string;
+  containerClassName?: string;
+  columns?: number;
+  id?: string;
+}
+
+const OptionGroupInput = React.forwardRef<HTMLDivElement, OptionGroupProps>(
+  ({ label, value, onChange, options, error, containerClassName, columns, id }, ref) => {
+    const cols = columns ?? options.length;
+    return (
+      <div ref={ref} className={cn('relative w-full', containerClassName)}>
+        {label && (
+          <label htmlFor={id} className={labelStyles}>
+            {label}
+          </label>
+        )}
+        <div
+          className={cn(
+            'grid border',
+            error ? 'border-red-500' : 'border-gray-300 dark:border-gray-800',
+          )}
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {options.map((opt, i) => {
+            const selected = value === opt.value;
+            const row = Math.floor(i / cols);
+            const lastRow = Math.floor((options.length - 1) / cols);
+            const isLastInRow = (i + 1) % cols === 0 || i === options.length - 1;
+            const isInLastRow = row === lastRow;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange(opt.value)}
+                className={cn(
+                  'cursor-pointer px-4 py-3 text-left text-sm transition-colors',
+                  !isLastInRow && 'border-r border-gray-300 dark:border-gray-800',
+                  !isInLastRow && 'border-b border-gray-300 dark:border-gray-800',
+                  selected
+                    ? 'bg-brand-purple dark:bg-brand-purple text-white dark:text-white'
+                    : 'bg-surface dark:bg-surface-muted text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-[#1a1a1a]',
+                )}
+              >
+                <span className="block text-[13px] font-medium">{opt.label}</span>
+                {opt.description && (
+                  <span
+                    className={cn(
+                      'mt-0.5 block text-[12px]',
+                      selected
+                        ? 'text-gray-300 dark:text-white'
+                        : 'text-gray-500 dark:text-gray-500',
+                    )}
+                  >
+                    {opt.description}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {error && <p className={errorStyles}>{error}</p>}
+      </div>
+    );
+  },
+);
+OptionGroupInput.displayName = 'CustomInput.OptionGroup';
+
+interface PhoneInputProps
+  extends Omit<BaseInputProps, 'onChange' | 'value' | 'type' | 'onBlur'> {
+  value: string;
+  onChange: (value: string) => void;
+  onValidate?: (error: string | null) => void;
+}
+
+const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
+  ({ value, onChange, onValidate, error, placeholder, ...rest }, ref) => (
+    <TextInput
+      ref={ref}
+      {...rest}
+      type="tel"
+      inputMode="tel"
+      autoComplete="tel"
+      placeholder={placeholder ?? '+91 98765 43210'}
+      value={value}
+      error={error}
+      onChange={(e) => {
+        onChange(formatPhoneInput(e.target.value));
+        if (error && onValidate) onValidate(null);
+      }}
+      onBlur={() => {
+        onValidate?.(validatePhone(value));
+      }}
+    />
+  ),
+);
+PhoneInput.displayName = 'CustomInput.Phone';
 
 const CustomInput = {
   Text: TextInput,
   Password: PasswordInput,
   Checkbox: CheckboxInput,
   Select: SelectInput,
+  OptionGroup: OptionGroupInput,
+  Phone: PhoneInput,
 };
 
 export { CustomInput };

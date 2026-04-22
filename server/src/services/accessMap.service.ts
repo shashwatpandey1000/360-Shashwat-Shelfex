@@ -8,6 +8,8 @@ export interface AccessMap {
   userId: string;
   orgId: string;
   orgStatus: string;
+  orgRejectedAt: string | null;
+  orgRejectionReason: string | null;
   roleTemplate: string;
   scopeType: 'org' | 'zones' | 'stores';
   dataScope: {
@@ -28,6 +30,8 @@ export async function buildAccessMap(userId: string): Promise<AccessMap | null> 
       roleTemplate: users.roleTemplate,
       scopeType: users.scopeType,
       orgStatus: organizations.status,
+      orgRejectedAt: organizations.rejectedAt,
+      orgRejectionReason: organizations.rejectionReason,
     })
     .from(users)
     .innerJoin(organizations, eq(users.orgId, organizations.id))
@@ -68,6 +72,8 @@ export async function buildAccessMap(userId: string): Promise<AccessMap | null> 
     userId: user.id,
     orgId: user.orgId,
     orgStatus: user.orgStatus,
+    orgRejectedAt: user.orgRejectedAt ? user.orgRejectedAt.toISOString() : null,
+    orgRejectionReason: user.orgRejectionReason ?? null,
     roleTemplate: user.roleTemplate,
     scopeType: user.scopeType as AccessMap['scopeType'],
     dataScope,
@@ -78,22 +84,14 @@ export async function buildAccessMap(userId: string): Promise<AccessMap | null> 
 
 // Look up 360 user by SSO user ID
 export async function findUserBySsoId(ssoUserId: string) {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.ssoUserId, ssoUserId))
-    .limit(1);
+  const [user] = await db.select().from(users).where(eq(users.ssoUserId, ssoUserId)).limit(1);
 
   return user || null;
 }
 
 // Look up 360 user by email (for account linking — invited users with sso_user_id = null)
 export async function findUserByEmail(email: string) {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
   return user || null;
 }
@@ -110,6 +108,21 @@ export async function linkSsoAccount(userId: string, ssoUserId: string) {
     })
     .where(eq(users.id, userId))
     .returning();
+
+  return updated || null;
+}
+
+// Mark first login once (idempotent by where last_login_at IS NULL)
+export async function markFirstLogin(userId: string) {
+  const [updated] = await db
+    .update(users)
+    .set({
+      status: 'active',
+      lastLoginAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId))
+    .returning({ id: users.id });
 
   return updated || null;
 }

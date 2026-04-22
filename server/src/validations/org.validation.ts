@@ -1,4 +1,22 @@
 import { z } from 'zod';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
+const internationalContactPhoneSchema = z
+  .string()
+  .trim()
+  .refine(
+    (value) => {
+      if (!value) return true;
+
+      if (!value.startsWith('+')) return false;
+
+      const parsed = parsePhoneNumberFromString(value);
+      return !!parsed && parsed.isValid();
+    },
+    {
+      message: 'Use a valid international format like +91 98765 43210',
+    },
+  );
 
 export const registerOrgSchema = z.object({
   orgName: z.string().min(2, 'Organization name must be at least 2 characters').max(100),
@@ -8,7 +26,7 @@ export const registerOrgSchema = z.object({
   currency: z.string().length(3, 'Currency must be ISO 4217').default('INR'),
   timezone: z.string().min(1).default('Asia/Kolkata'),
   website: z.string().url().optional().or(z.literal('')),
-  contactPhone: z.string().optional(),
+  contactPhone: internationalContactPhoneSchema.optional().or(z.literal('')),
   hqAddress: z
     .object({
       street: z.string().optional(),

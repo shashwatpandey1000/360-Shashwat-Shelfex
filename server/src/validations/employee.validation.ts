@@ -27,6 +27,7 @@ export const listEmployeesSchema = z.object({
   search: z.string().optional(),
   roleTemplate: z.enum(['org_manager', 'zone_manager', 'store_manager', 'surveyor']).optional(),
   status: z.enum(['active', 'inactive', 'pending_first_login']).optional(),
+  storeId: z.string().uuid().optional(),
   sortBy: z.enum(['name', 'email', 'createdAt', 'roleTemplate']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

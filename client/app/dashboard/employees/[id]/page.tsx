@@ -111,7 +111,9 @@ export default function EmployeeDetailPage() {
     }
   }, [id, router]);
 
-  useEffect(() => { fetchEmployee(); }, [fetchEmployee]);
+  useEffect(() => {
+    fetchEmployee();
+  }, [fetchEmployee]);
 
   // Debounced store search
   useEffect(() => {
@@ -123,7 +125,9 @@ export default function EmployeeDetailPage() {
       try {
         const res = await storesApi.list({ perPage: 15, search: storeSearch });
         setStoreResults(res.data.data.map((s: any) => ({ id: s.id, name: s.name })));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 300);
     return () => clearTimeout(timer);
   }, [storeSearch, showStoreSearch]);
@@ -188,9 +192,7 @@ export default function EmployeeDetailPage() {
           >
             <ArrowLeft size={16} />
           </Button>
-          <h1 className="text-xl font-semibold uppercase">
-            {employee.name || employee.email}
-          </h1>
+          <h1 className="text-xl font-semibold uppercase">{employee.name || employee.email}</h1>
           <StatusBadge status={employee.status} />
           <span className="bg-gray-100 px-2 py-0.5 text-xs">
             {ROLE_LABELS[employee.roleTemplate] || employee.roleTemplate}
@@ -237,17 +239,34 @@ export default function EmployeeDetailPage() {
                 <InfoRow label="Name" value={employee.name || '—'} />
                 <InfoRow label="Email" value={employee.email} />
                 <InfoRow label="Phone" value={employee.phone || '—'} />
-                <InfoRow label="Role" value={ROLE_LABELS[employee.roleTemplate] || employee.roleTemplate} />
+                <InfoRow
+                  label="Role"
+                  value={ROLE_LABELS[employee.roleTemplate] || employee.roleTemplate}
+                />
                 <InfoRow label="Status" value={employee.status.replace(/_/g, ' ')} />
-                <InfoRow label="SSO Linked" value={employee.ssoUserId ? 'Yes' : 'Pending registration'} />
-                <InfoRow label="Last Login" value={employee.lastLoginAt ? new Date(employee.lastLoginAt).toLocaleString() : 'Never'} />
+                <InfoRow
+                  label="SSO Linked"
+                  value={employee.ssoUserId ? 'Yes' : 'Pending registration'}
+                />
+                <InfoRow
+                  label="Last Login"
+                  value={
+                    employee.lastLoginAt ? new Date(employee.lastLoginAt).toLocaleString() : 'Never'
+                  }
+                />
               </div>
             </SectionCard>
             <SectionCard title="Info" variant="muted">
               <div className="space-y-2 text-sm text-gray-500">
                 <InfoRow label="ID" value={employee.id} mono />
-                <InfoRow label="Created" value={new Date(employee.createdAt).toLocaleDateString()} />
-                <InfoRow label="Updated" value={new Date(employee.updatedAt).toLocaleDateString()} />
+                <InfoRow
+                  label="Created"
+                  value={new Date(employee.createdAt).toLocaleDateString()}
+                />
+                <InfoRow
+                  label="Updated"
+                  value={new Date(employee.updatedAt).toLocaleDateString()}
+                />
               </div>
             </SectionCard>
           </div>
@@ -259,7 +278,10 @@ export default function EmployeeDetailPage() {
               <>
                 <SectionCard title="Role & Scope">
                   <div className="space-y-3 text-sm">
-                    <InfoRow label="Role" value={ROLE_LABELS[employee.roleTemplate] || employee.roleTemplate} />
+                    <InfoRow
+                      label="Role"
+                      value={ROLE_LABELS[employee.roleTemplate] || employee.roleTemplate}
+                    />
                     <InfoRow label="Scope Type" value={employee.scopeType} />
                     {employee.scopeType === 'org' && (
                       <p className="text-gray-500">Full organization access — sees all stores</p>
@@ -328,7 +350,10 @@ export default function EmployeeDetailPage() {
                     {editStoreIds.length > 0 && (
                       <div className="mb-3 space-y-1">
                         {editStoreIds.map((sid) => (
-                          <div key={sid} className="flex items-center justify-between px-2 py-1.5 text-sm odd:bg-gray-50">
+                          <div
+                            key={sid}
+                            className="flex items-center justify-between px-2 py-1.5 text-sm odd:bg-gray-50"
+                          >
                             <div className="flex items-center gap-2">
                               <span className="h-1.5 w-1.5 bg-[#131313]" />
                               {editStoreNames[sid] || sid}
@@ -368,7 +393,10 @@ export default function EmployeeDetailPage() {
                           />
                           <button
                             type="button"
-                            onClick={() => { setShowStoreSearch(false); setStoreSearch(''); }}
+                            onClick={() => {
+                              setShowStoreSearch(false);
+                              setStoreSearch('');
+                            }}
                             className="text-gray-400 hover:text-black"
                           >
                             <X size={14} />
@@ -443,7 +471,8 @@ export default function EmployeeDetailPage() {
               </div>
             </SectionCard>
             <p className="mt-3 text-xs text-gray-400">
-              Permissions are set automatically from the role template. Changing the role on the Access & Stores tab will update permissions.
+              Permissions are set automatically from the role template. Changing the role on the
+              Access & Stores tab will update permissions.
             </p>
           </div>
         )}

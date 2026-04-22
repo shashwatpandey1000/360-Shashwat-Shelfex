@@ -1,5 +1,6 @@
 'use client';
 
+import { MapPin } from 'lucide-react';
 import type { AddressData } from './PlacesAutocomplete';
 
 interface AddressSummaryProps {
@@ -9,15 +10,19 @@ interface AddressSummaryProps {
 export default function AddressSummary({ address }: AddressSummaryProps) {
   if (!address.city) return null;
 
+  const primaryLine = [address.street, address.city, address.state, address.postalCode]
+    .filter(Boolean)
+    .join(', ');
+
   return (
-    <div className="space-y-1 border bg-gray-50 p-3 text-sm text-gray-600">
-      {address.street && <div>{address.street}</div>}
-      <div>
-        {[address.city, address.state, address.postalCode].filter(Boolean).join(', ')}
-      </div>
-      <div className="font-mono text-xs text-gray-400">
-        {address.country}
-        {address.lat ? ` · ${address.lat.toFixed(5)}, ${address.lng.toFixed(5)}` : ''}
+    <div className="mt-2 flex items-start gap-2 text-sm">
+      <MapPin size={14} className="mt-0.5 shrink-0 text-brand-purple" />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-brand">{primaryLine}</div>
+        <div className="font-mono text-[11px] text-gray-400 dark:text-gray-500">
+          {address.country}
+          {address.lat ? ` · ${address.lat.toFixed(5)}, ${address.lng.toFixed(5)}` : ''}
+        </div>
       </div>
     </div>
   );

@@ -1,19 +1,22 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { authApi } from "@/lib/api";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { authApi } from '@/lib/api';
 
 interface User {
   email: string;
   emailVerified: boolean;
+  firstLogin?: boolean;
 }
 
 interface AccessMap {
   userId: string;
   orgId: string;
   orgStatus: string;
+  orgRejectedAt: string | null;
+  orgRejectionReason: string | null;
   roleTemplate: string;
-  scopeType: "org" | "zones" | "stores";
+  scopeType: 'org' | 'zones' | 'stores';
   dataScope: {
     zoneIds?: string[];
     storeIds?: string[];
@@ -63,11 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authApi.logout();
-      const ssoUrl =
-        process.env.NEXT_PUBLIC_SSO_API_URL || "http://localhost:8000/api/v1";
+      const ssoUrl = process.env.NEXT_PUBLIC_SSO_API_URL || 'http://localhost:8000/api/v1';
       window.location.href = `${ssoUrl}/auth/logout?redirect_uri=${encodeURIComponent(window.location.origin)}`;
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     }
   };
 
@@ -82,8 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasAnyPermission = (permissions: string[]) =>
     permissions.some((p) => accessMap?.permissions.includes(p) ?? false);
 
-  const hasModule = (module: string) =>
-    accessMap?.modules.includes(module) ?? false;
+  const hasModule = (module: string) => accessMap?.modules.includes(module) ?? false;
 
   return (
     <AuthContext.Provider
@@ -108,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

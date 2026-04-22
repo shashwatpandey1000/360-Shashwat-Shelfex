@@ -4,7 +4,7 @@ import Loader from './utility/loader';
 
 export default function PageLoader() {
   return (
-    <div className="flex min-h-[65vh] items-center justify-center bg-gray-100">
+    <div className="flex flex-1 items-center justify-center">
       <Loader />
     </div>
   );

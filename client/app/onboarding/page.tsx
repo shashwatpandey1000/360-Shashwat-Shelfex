@@ -6,8 +6,14 @@ import { useEffect, useState } from 'react';
 import { orgApi } from '@/lib/api/org.api';
 import { lookupsApi } from '@/lib/api/lookups.api';
 import { CustomInput } from '@/components/common/input';
+import { CustomButton } from '@/components/common/button';
+import { validatePhone } from '@/lib/phone';
 import PlacesAutocomplete, { AddressData } from '@/components/common/PlacesAutocomplete';
+import { UserAvatar } from '@/components/common/user-avatar';
+import { ThemeToggle } from '@/components/common/theme-toggle';
+import { VerticalStepRail } from './components/StepRail';
 import { toast } from 'sonner';
+import Loader from '@/components/common/utility/loader';
 
 interface Industry {
   id: string;
@@ -26,6 +32,7 @@ export default function OnboardingPage() {
   const [industryId, setIndustryId] = useState('');
   const [website, setWebsite] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactPhoneError, setContactPhoneError] = useState('');
   const [hqAddress, setHqAddress] = useState<AddressData | null>(null);
 
   useEffect(() => {
@@ -42,9 +49,12 @@ export default function OnboardingPage() {
   }, [isLoading, needsOnboarding, accessMap, router]);
 
   useEffect(() => {
-    lookupsApi.getIndustries().then((res) => {
-      setIndustries(res.data || []);
-    }).catch(() => {});
+    lookupsApi
+      .getIndustries()
+      .then((res) => {
+        setIndustries(res.data || []);
+      })
+      .catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,6 +63,14 @@ export default function OnboardingPage() {
       toast.error('Please fill in all required fields.');
       return;
     }
+
+    const phoneError = validatePhone(contactPhone);
+    if (phoneError) {
+      setContactPhoneError(phoneError);
+      toast.error('Please enter a valid contact phone number.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await orgApi.register({
@@ -77,102 +95,143 @@ export default function OnboardingPage() {
 
   if (isLoading || !needsOnboarding) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-[#131313]" />
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-[#010101]">
+        <Loader />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-lg border bg-white p-8">
-        <h1 className="text-xl font-semibold text-[#131313]">Register Your Organization</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome, {user?.email}. Set up your organization to get started.
-        </p>
+    <form
+      onSubmit={handleSubmit}
+      className="flex h-screen w-full flex-col bg-white dark:bg-[#0a0a0a]"
+    >
+      <header className="fixed top-0 left-0 z-50 flex h-14 w-full shrink-0 items-stretch justify-between bg-white px-6 dark:bg-[#0a0a0a]">
+        <div className="flex items-center">
+          <span className="text-sm font-semibold tracking-[0.2em] text-[#131313] dark:text-white">
+            LOGO
+          </span>
+        </div>
+        <div className="flex items-stretch">
+          <ThemeToggle />
+          <UserAvatar />
+        </div>
+      </header>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <CustomInput.Text
-            label="Organization Name *"
-            placeholder="e.g. Acme Retail"
-            value={orgName}
-            onChange={(e) => setOrgName(e.target.value)}
-            required
-          />
+      <div className="relative flex flex-1 overflow-y-auto">
+        <div className="absolute top-0 bottom-0 left-0 hidden w-64 items-center justify-center lg:flex">
+          <VerticalStepRail currentStep="details" />
+        </div>
 
-          <div>
-            <label className="mb-2 block text-[14px] font-medium text-[#131313]">
-              Organization Type *
-            </label>
-            <div className="flex gap-3">
-              {(['single_store', 'chain'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setOrgType(t)}
-                  className={`flex-1 border px-4 py-2 text-sm transition-colors ${
-                    orgType === t
-                      ? 'border-[#131313] bg-[#131313] text-white'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-black'
-                  }`}
-                >
-                  {t === 'single_store' ? 'Single Store' : 'Chain'}
-                </button>
-              ))}
+        <div className="flex-1 overflow-y-auto pt-18 pb-10">
+          <div className="mx-auto max-w-2xl px-8 py-10">
+            <header className="mb-10 border-b border-gray-200 pb-6 dark:border-gray-800">
+              <div className="inline-flex items-center gap-2 border border-gray-200 bg-white px-2.5 py-1 dark:border-gray-800 dark:bg-[#131313]">
+                <span className="h-1.5 w-1.5 bg-[#131313] dark:bg-white" />
+                <span className="text-[11px] font-medium tracking-[0.12em] text-[#131313] uppercase dark:text-white">
+                  Step 1 of 3
+                </span>
+              </div>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[#131313] dark:text-white">
+                Register your organization
+              </h1>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Signed in as <span className="text-[#131313] dark:text-white">{user?.email}</span>.
+                Fields marked with an asterisk are required.
+              </p>
+            </header>
+
+            <div className="space-y-10">
+              <Section title="Organization" hint="Basic information about your business.">
+                <CustomInput.Text
+                  label="Organization name *"
+                  placeholder="e.g. Acme Retail"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  required
+                />
+
+                <CustomInput.OptionGroup
+                  label="Organization type *"
+                  value={orgType}
+                  onChange={(v) => setOrgType(v as 'chain' | 'single_store')}
+                  options={[
+                    {
+                      value: 'single_store',
+                      label: 'Single store',
+                      description: 'One storefront or location.',
+                    },
+                    {
+                      value: 'chain',
+                      label: 'Chain',
+                      description: 'Multiple locations.',
+                    },
+                  ]}
+                />
+
+                <CustomInput.Select
+                  label="Industry *"
+                  value={industryId}
+                  onChange={(e) => setIndustryId(e.target.value)}
+                  options={industries.map((ind) => ({ value: ind.id, label: ind.name }))}
+                  placeholder="Select an industry"
+                />
+              </Section>
+
+              <Section title="Contact" hint="Optional. Used by support to reach you.">
+                <PlacesAutocomplete
+                  label="HQ address"
+                  placeholder="Search for your office address..."
+                  value={hqAddress?.formattedAddress}
+                  onSelect={setHqAddress}
+                />
+                <CustomInput.Text
+                  label="Website"
+                  placeholder="https://example.com"
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+                <CustomInput.Phone
+                  label="Contact phone"
+                  value={contactPhone}
+                  onChange={setContactPhone}
+                  onValidate={(err) => setContactPhoneError(err ?? '')}
+                  error={contactPhoneError}
+                />
+              </Section>
             </div>
           </div>
-
-          <div>
-            <label className="mb-2 block text-[14px] font-medium text-[#131313]">
-              Industry *
-            </label>
-            <select
-              value={industryId}
-              onChange={(e) => setIndustryId(e.target.value)}
-              required
-              className="w-full border bg-white px-3 py-2 text-[14px] text-gray-900 transition-all hover:border-black focus:border-black focus:outline-none"
-            >
-              <option value="">Select an industry</option>
-              {industries.map((ind) => (
-                <option key={ind.id} value={ind.id}>
-                  {ind.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <CustomInput.Text
-            label="Website"
-            placeholder="https://example.com"
-            type="url"
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-          />
-
-          <CustomInput.Text
-            label="Contact Phone"
-            placeholder="+91 98765 43210"
-            type="tel"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
-          />
-
-          <PlacesAutocomplete
-            label="HQ Address"
-            placeholder="Search for your office address..."
-            value={hqAddress?.formattedAddress}
-            onSelect={setHqAddress}
-          />
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-[#131313] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2a2a2a] disabled:opacity-50"
-          >
-            {submitting ? 'Registering…' : 'Register Organization'}
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <footer className="flex h-16 shrink-0 items-center justify-end border-t border-gray-200 px-8 dark:border-gray-800">
+        <CustomButton type="submit" disabled={submitting}>
+          {submitting ? 'Submitting…' : 'Submit for review'}
+        </CustomButton>
+      </footer>
+    </form>
+  );
+}
+
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="mb-5 border-b border-gray-200 pb-3 dark:border-gray-800">
+        <h2 className="text-[11px] font-medium tracking-[0.12em] text-gray-500 uppercase dark:text-gray-400">
+          {title}
+        </h2>
+        {hint && <p className="mt-1 text-[12px] text-gray-400 dark:text-gray-500">{hint}</p>}
+      </div>
+      <div className="space-y-5">{children}</div>
+    </section>
   );
 }

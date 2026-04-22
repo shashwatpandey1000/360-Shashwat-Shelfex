@@ -1,5 +1,5 @@
-import React from "react";
-import { Loader as LoadingSpinner } from "lucide-react";
+import React from 'react';
+import { Loader2 as LoadingSpinner } from 'lucide-react';
 
 const Loader = ({ className }: { className?: string }) => {
   return (

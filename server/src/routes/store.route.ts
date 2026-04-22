@@ -18,6 +18,11 @@ router.get('/', requirePermission('stores:read'), list);
 router.get('/:id', requirePermission('stores:read'), detail);
 router.patch('/:id', requirePermission('stores:write'), validate(updateStoreSchema), update);
 router.post('/:id/deactivate', requirePermission('stores:delete'), deactivate);
-router.post('/:storeId/manager', requirePermission('stores:write'), validate(assignManagerSchema), assignManager);
+router.post(
+  '/:storeId/manager',
+  requirePermission('stores:write'),
+  validate(assignManagerSchema),
+  assignManager,
+);
 
 export default router;

@@ -46,14 +46,17 @@ export default function PlacesAutocomplete({
   onChange,
 }: PlacesAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const dummyDivRef = useRef<HTMLDivElement>(null);
+  const skipNextFetchRef = useRef(false);
 
   const [inputValue, setInputValue] = useState(value || '');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
@@ -94,7 +97,7 @@ export default function PlacesAutocomplete({
                 secondaryText: r.structured_formatting.secondary_text || '',
               })),
             );
-            setShowDropdown(true);
+            setShowDropdown(isFocused);
           } else {
             setPredictions([]);
             setShowDropdown(false);
@@ -102,11 +105,15 @@ export default function PlacesAutocomplete({
         },
       );
     },
-    [],
+    [isFocused],
   );
 
   // Debounce input
   useEffect(() => {
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       if (inputValue.length >= 2) {
         fetchPredictions(inputValue);
@@ -123,7 +130,10 @@ export default function PlacesAutocomplete({
     if (!placesServiceRef.current) return;
 
     placesServiceRef.current.getDetails(
-      { placeId: prediction.placeId, fields: ['address_components', 'formatted_address', 'geometry'] },
+      {
+        placeId: prediction.placeId,
+        fields: ['address_components', 'formatted_address', 'geometry'],
+      },
       (place, status) => {
         if (status !== google.maps.places.PlacesServiceStatus.OK || !place) return;
 
@@ -156,9 +166,12 @@ export default function PlacesAutocomplete({
           lng: place.geometry?.location?.lng() || 0,
         };
 
+        skipNextFetchRef.current = true;
         setInputValue(place.formatted_address || prediction.description);
         setPredictions([]);
         setShowDropdown(false);
+        setIsFocused(false);
+        inputRef.current?.blur();
         onSelect(address);
       },
     );
@@ -181,11 +194,12 @@ export default function PlacesAutocomplete({
       <div ref={dummyDivRef} style={{ display: 'none' }} />
 
       {label && (
-        <label className="mb-2 block text-[14px] font-medium leading-5 text-[#131313]">
+        <label className="mb-2 block text-[14px] leading-5 font-medium text-[#131313] dark:text-white">
           {label}
         </label>
       )}
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={(e) => {
@@ -193,13 +207,17 @@ export default function PlacesAutocomplete({
           onChange?.(e.target.value);
         }}
         onFocus={() => {
+          setIsFocused(true);
           if (predictions.length > 0) setShowDropdown(true);
         }}
+        onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
         disabled={disabled || !isLoaded}
         className={cn(
           'flex w-full rounded-none border bg-white px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400',
+          'dark:border-gray-800 dark:bg-[#131313] dark:text-white dark:placeholder:text-gray-500',
           'transition-all duration-200 hover:border-black focus:border-black focus:outline-none',
+          'dark:hover:border-white dark:focus:border-white',
           'disabled:cursor-not-allowed disabled:opacity-50',
           error ? 'border-red-500' : '',
         )}
@@ -208,23 +226,27 @@ export default function PlacesAutocomplete({
 
       {/* Custom dropdown — renders inside React tree, no DOM portal issues */}
       {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full border bg-white shadow-lg">
+        <div className="absolute z-50 mt-1 w-full border bg-white shadow-lg dark:border-gray-800 dark:bg-[#131313]">
           {predictions.map((p) => (
             <button
               key={p.placeId}
               type="button"
-              className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-gray-100"
+              className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-white/10"
               onMouseDown={(e) => {
                 // onMouseDown instead of onClick to fire before onBlur
                 e.preventDefault();
                 handleSelect(p);
               }}
             >
-              <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
+              <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" />
               <div className="min-w-0">
-                <div className="truncate font-medium text-[#131313]">{p.mainText}</div>
+                <div className="truncate font-medium text-[#131313] dark:text-white">
+                  {p.mainText}
+                </div>
                 {p.secondaryText && (
-                  <div className="truncate text-xs text-gray-500">{p.secondaryText}</div>
+                  <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                    {p.secondaryText}
+                  </div>
                 )}
               </div>
             </button>

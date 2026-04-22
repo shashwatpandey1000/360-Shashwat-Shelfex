@@ -71,6 +71,7 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
     user: {
       email: req.user.email,
       emailVerified: req.user.emailVerified,
+      firstLogin: !!req.isFirstLogin,
     },
     accessMap: req.accessMap || null, // null = authenticated via SSO but not registered in 360 yet
   });
@@ -100,7 +101,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
 
     logger.info('Token refreshed successfully');
 
-    ApiResponse.success(res, null, 'Token refreshed');
+    ApiResponse.success(res, { accessToken, refreshToken: newRefreshToken || null }, 'Token refreshed');
   } catch (error: any) {
     logger.error(`Token refresh failed: ${error.response?.data?.message || error.message}`);
 
