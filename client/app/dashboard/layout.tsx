@@ -2,6 +2,14 @@
 
 import { Button } from '@/components/ui/button';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
   CalendarDays,
   ClipboardList,
   LayoutDashboard,
@@ -65,6 +73,49 @@ const ALL_SIDEBAR_ITEMS = [
   },
 ];
 
+const SEGMENT_LABELS: Record<string, string> = {
+  dashboard: 'Dashboard',
+  employees: 'Employees',
+  stores: 'Stores',
+  surveys: 'Surveys',
+  schedule: 'Schedule',
+  settings: 'Settings',
+  zones: 'Zones',
+};
+
+const DashboardBreadcrumb = () => {
+  const pathname = usePathname();
+  const segments = pathname.split('/').filter(Boolean);
+
+  const crumbs = segments.map((seg, i) => {
+    const href = '/' + segments.slice(0, i + 1).join('/');
+    const isLast = i === segments.length - 1;
+    const label = SEGMENT_LABELS[seg] ?? seg.slice(0, 8) + '…';
+    return { href, label, isLast };
+  });
+
+  return (
+    <Breadcrumb className="ml-4">
+      <BreadcrumbList className="text-xs">
+        {crumbs.map((crumb, i) => (
+          <React.Fragment key={crumb.href}>
+            {i > 0 && <BreadcrumbSeparator />}
+            <BreadcrumbItem>
+              {crumb.isLast ? (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink render={<Link href={crumb.href} />}>
+                  {crumb.label}
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          </React.Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
 const SidebarContext = createContext<{
   collapsed: boolean;
   toggle: () => void;
@@ -117,9 +168,12 @@ const Header = () => {
         </div>
       </div>
 
-      <div className="flex h-full flex-1 items-stretch justify-end">
-        <ThemeToggle />
-        <UserAvatar />
+      <div className="flex h-full flex-1 items-center justify-between">
+        <DashboardBreadcrumb />
+        <div className="flex h-full items-stretch">
+          <ThemeToggle />
+          <UserAvatar />
+        </div>
       </div>
     </header>
   );
@@ -171,7 +225,6 @@ const Sidebar = () => {
         ))}
       </div>
       <SidebarSeparator />
-      <div className="h-[110px]"></div>
     </aside>
   );
 };
@@ -214,12 +267,12 @@ const SideBarItem = ({
     <Link
       href={href}
       onClick={closeSidebar}
-      className={`group flex h-9 items-center ${
+      className={`group flex h-9 items-center rounded-md ${
         collapsed ? 'justify-center' : 'justify-start'
       } ${isSelected ? 'bg-brand-purple' : 'hover:bg-gray-200/70 dark:hover:bg-gray-800/60'}`}
     >
       <div
-        className={`flex aspect-square h-full items-center justify-center p-1.5 ${
+        className={`flex aspect-square h-full items-center justify-center rounded-md p-1.5 ${
           isSelected ? 'text-white' : 'text-gray-500 dark:text-gray-400'
         }`}
       >

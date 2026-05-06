@@ -206,7 +206,7 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
                 <button
                   type="button"
                   onClick={() => setSelectedManager(null)}
-                  className="flex aspect-square h-full px-3 items-center justify-center self-stretch text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                  className="flex aspect-square h-full items-center justify-center self-stretch px-3 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 >
                   <X size={14} />
                 </button>
@@ -215,20 +215,20 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full rounded-none border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:border-brand hover:bg-gray-200 dark:border-gray-800 dark:text-gray-300 dark:hover:border-white dark:hover:bg-neutral-800"
+                className="hover:border-brand w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-200 dark:border-gray-800 dark:text-gray-300 dark:hover:border-white dark:hover:bg-neutral-800"
                 onClick={() => setShowManagerSearch(true)}
               >
                 Assign Existing Employee
               </Button>
             ) : (
               <div>
-                <div className="focus-within:border-brand hover:border-brand dark:focus-within:border-brand dark:hover:border-brand relative mb-1 flex items-stretch border border-gray-300 dark:border-gray-800">
+                <div className="focus-within:border-brand hover:border-brand dark:focus-within:border-brand dark:hover:border-brand relative mb-1 rounded-md flex items-stretch border border-gray-300 dark:border-gray-800">
                   <input
                     type="text"
                     value={managerSearch}
                     onChange={(e) => setManagerSearch(e.target.value)}
                     placeholder="Search employees by name or email..."
-                    className="bg-surface dark:bg-surface-muted flex w-full px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-500"
+                    className="bg-surface dark:bg-surface-muted rounded-md flex w-full px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-500"
                   />
                   <button
                     type="button"
@@ -237,7 +237,7 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
                       setManagerSearch('');
                       setManagerResults([]);
                     }}
-                    className="flex aspect-square items-center justify-center px-3 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                    className="flex aspect-square items-center rounded-md justify-center px-3 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                   >
                     <X size={14} />
                   </button>

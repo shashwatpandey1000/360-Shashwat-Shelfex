@@ -15,6 +15,10 @@ const STATUS_STYLES: Record<string, string> = {
   in_progress: 'bg-blue-100 text-blue-700',
   draft: 'bg-gray-200 text-gray-600',
   published: 'bg-[#c4ffdf] text-black',
+  // Schedule slot statuses
+  cancelled: 'bg-gray-200 text-gray-500',
+  skipped: 'bg-gray-100 text-gray-500',
+  excused: 'bg-purple-100 text-purple-700',
 };
 
 interface StatusBadgeProps {

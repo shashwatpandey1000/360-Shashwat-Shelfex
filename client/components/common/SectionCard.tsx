@@ -18,7 +18,7 @@ export default function SectionCard({
   return (
     <div
       className={cn(
-        'border border-gray-200 p-6 dark:border-gray-800',
+        'rounded-lg border border-gray-200 p-6 dark:border-gray-800',
         variant === 'muted' ? 'bg-gray-50 dark:bg-neutral-800' : 'bg-surface',
         className,
       )}

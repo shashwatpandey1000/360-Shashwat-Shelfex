@@ -28,8 +28,8 @@ export const scheduleTemplates = pgTable(
     storeId: uuid('store_id').references(() => stores.id), // null = org-wide default
     name: text('name').notNull(),
     timezone: text('timezone').notNull(),
-    effectiveFrom: date('effective_from').notNull(),
-    effectiveUntil: date('effective_until'),
+    effectiveFrom: date('effective_from', { mode: 'string' }).notNull(),
+    effectiveUntil: date('effective_until', { mode: 'string' }),
     isActive: boolean('is_active').notNull().default(true),
     createdBy: uuid('created_by').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -154,7 +154,7 @@ export const scheduleInstances = pgTable(
     timeWindowId: uuid('time_window_id')
       .notNull()
       .references(() => timeWindows.id),
-    scheduledDate: date('scheduled_date').notNull(),
+    scheduledDate: date('scheduled_date', { mode: 'string' }).notNull(),
     windowStartUtc: timestamp('window_start_utc', { withTimezone: true }).notNull(),
     windowEndUtc: timestamp('window_end_utc', { withTimezone: true }).notNull(),
     windowStartLocal: timestamp('window_start_local').notNull(),

@@ -45,7 +45,7 @@ export function ThemeToggle({ className, ...props }: ThemeToggleProps) {
         >
           <div
             className={cn(
-              'flex h-full w-full items-center justify-center rounded-none border transition-colors',
+              'flex h-full w-full items-center justify-center rounded-md border transition-colors',
               'border-gray-200 bg-white text-[#131313] hover:bg-gray-50',
               'dark:border-gray-800 dark:bg-[#131313] dark:text-white dark:hover:bg-[#1a1a1a]',
             )}
@@ -54,7 +54,7 @@ export function ThemeToggle({ className, ...props }: ThemeToggleProps) {
           </div>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-40 rounded-none">
+      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-40 rounded-md">
         <DropdownMenuLabel className="px-2 py-1.5 text-xs font-normal text-gray-500 uppercase">
           Theme
         </DropdownMenuLabel>
@@ -63,7 +63,7 @@ export function ThemeToggle({ className, ...props }: ThemeToggleProps) {
           <DropdownMenuItem
             key={option.value}
             onClick={() => setTheme(option.value)}
-            className="flex cursor-pointer items-center justify-between rounded-none"
+            className="flex cursor-pointer items-center justify-between rounded-md"
           >
             <span>{option.label}</span>
             {activeTheme === option.value && <Check className="h-4 w-4" />}

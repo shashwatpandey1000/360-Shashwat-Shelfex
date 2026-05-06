@@ -28,13 +28,13 @@ export function UserAvatar() {
       <DropdownMenuTrigger asChild>
         <button className="aspect-square h-full cursor-pointer p-2 focus:outline-none">
           <Avatar className="h-full w-full cursor-pointer">
-            <AvatarFallback className="rounded-none bg-linear-to-br from-blue-500 to-purple-600 text-sm font-medium text-white">
+            <AvatarFallback className="rounded-full bg-linear-to-br from-blue-500 to-purple-600 text-sm font-medium text-white">
               {getInitials()}
             </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-64 rounded-none">
+      <DropdownMenuContent align="end" className="-mt-1.5 mr-2 w-64 rounded-md">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1 p-1">
             <p className="text-muted-foreground truncate text-sm leading-none">{user.email}</p>
@@ -43,7 +43,7 @@ export function UserAvatar() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={logout}
-          className="group cursor-pointer rounded-none hover:bg-red-800! hover:text-white!"
+          className="group cursor-pointer rounded-md hover:bg-red-800! hover:text-white!"
         >
           <LogOut className="mr-2 h-4 w-4 text-xs group-hover:text-white" />
           <span>Logout</span>

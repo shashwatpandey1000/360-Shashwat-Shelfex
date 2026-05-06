@@ -26,6 +26,12 @@ export interface CreateStoreData {
   contactEmail?: string;
 }
 
+export interface BulkImportResponse {
+  created: number;
+  createdDetails: { storeName: string; managerEmail: string; isNewManager: boolean }[];
+  failed: { row: number; storeName: string; reason: string }[];
+}
+
 export const storesApi = {
   async list(params?: StoreListParams) {
     const response = await apiClient.get('/stores', { params });
@@ -45,6 +51,15 @@ export const storesApi = {
   },
   async deactivate(id: string) {
     const response = await apiClient.post(`/stores/${id}/deactivate`);
+    return response.data;
+  },
+  async bulkImport(file: File): Promise<{ success: boolean; message: string; data: BulkImportResponse }> {
+    const form = new FormData();
+    form.append('file', file);
+    // Let axios handle Content-Type with boundary by omitting it here
+    const response = await apiClient.post('/stores/bulk-import', form, {
+      headers: { 'Content-Type': undefined },
+    });
     return response.data;
   },
 };

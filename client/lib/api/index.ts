@@ -5,4 +5,6 @@ export { orgApi } from './org.api';
 export { storesApi } from './stores.api';
 export type { StoreListParams, CreateStoreData } from './stores.api';
 export { employeesApi } from './employees.api';
-export type { EmployeeListParams, CreateEmployeeData } from './employees.api';
+export type { EmployeeListParams, CreateEmployeeData, UpdateEmployeeData } from './employees.api';
+export { zonesApi } from './zones.api';
+export type { ZoneListParams, CreateZoneData, Zone } from './zones.api';

@@ -20,6 +20,15 @@ export interface CreateEmployeeData {
   phone?: string;
 }
 
+export interface UpdateEmployeeData {
+  name?: string;
+  phone?: string;
+  roleTemplate?: 'org_manager' | 'zone_manager' | 'store_manager' | 'surveyor';
+  scopeType?: 'org' | 'zones' | 'stores';
+  scopeEntityIds?: string[];
+  permissions?: string[];
+}
+
 export const employeesApi = {
   async list(params?: EmployeeListParams) {
     const response = await apiClient.get('/employees', { params });
@@ -33,12 +42,16 @@ export const employeesApi = {
     const response = await apiClient.post('/employees', data);
     return response.data;
   },
-  async update(id: string, data: Partial<CreateEmployeeData>) {
+  async update(id: string, data: UpdateEmployeeData) {
     const response = await apiClient.patch(`/employees/${id}`, data);
     return response.data;
   },
   async deactivate(id: string) {
     const response = await apiClient.post(`/employees/${id}/deactivate`);
+    return response.data;
+  },
+  async reactivate(id: string) {
+    const response = await apiClient.post(`/employees/${id}/reactivate`);
     return response.data;
   },
   async assignStoreManager(storeId: string, employeeId: string) {

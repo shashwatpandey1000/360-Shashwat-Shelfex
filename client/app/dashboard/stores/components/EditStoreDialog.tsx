@@ -180,11 +180,11 @@ export default function EditStoreDialog({ store, onUpdated, trigger }: EditStore
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" className="rounded-none" onClick={() => setOpen(false)}>
+          <Button variant="outline" className="rounded-md" onClick={() => setOpen(false)}>
             Cancel
           </Button>
           <Button
-            className="rounded-none"
+            className="rounded-md"
             onClick={handleSubmit}
             disabled={!name.trim() || submitting}
           >

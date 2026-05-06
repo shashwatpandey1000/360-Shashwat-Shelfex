@@ -15,6 +15,7 @@ import type {
   UpdateEmployeeInput,
   ListEmployeesQuery,
 } from '../validations/employee.validation';
+import { PERMISSIONS } from '../utils/permissions';
 
 // Role hierarchy: which roles a given caller roleTemplate is allowed to create
 const CREATABLE_ROLES: Record<string, string[]> = {
@@ -128,7 +129,7 @@ export async function createEmployee(
   }
 
   // Send invite email (non-blocking)
-  const ssoUrl = process.env.SSO_FRONTEND_URL || 'https://sso-front-zeta.vercel.app';
+  const ssoUrl = process.env.SSO_FRONTEND_URL || 'https://accounts.shelfexecution.com';
   const roleName = template.displayName;
   sendEmployeeInviteEmail(
     input.email,
@@ -334,8 +335,25 @@ export async function updateEmployee(
   if (input.name !== undefined) updateData.name = input.name;
   if (input.phone !== undefined) updateData.phone = input.phone || null;
 
-  // If role template changed → rewrite permissions
-  if (input.roleTemplate && input.roleTemplate !== existing.roleTemplate) {
+  // If custom permissions array is provided → write them directly
+  if (input.permissions !== undefined) {
+    // Validate all permissions are valid
+    const validPerms = input.permissions.filter((p) =>
+      (PERMISSIONS as readonly string[]).includes(p),
+    );
+
+    // Delete old permissions, insert new
+    await db.delete(userPermissions).where(eq(userPermissions.userId, employeeId));
+    if (validPerms.length > 0) {
+      await db.insert(userPermissions).values(
+        validPerms.map((p) => ({
+          userId: employeeId,
+          permission: p,
+        })),
+      );
+    }
+  } else if (input.roleTemplate && input.roleTemplate !== existing.roleTemplate) {
+    // If role template changed → rewrite permissions from template
     updateData.roleTemplate = input.roleTemplate;
 
     // Get new template permissions
@@ -404,6 +422,17 @@ export async function deactivateEmployee(orgId: string, employeeId: string) {
       .set({ managerId: null, updatedAt: new Date() })
       .where(and(eq(stores.orgId, orgId), eq(stores.managerId, employeeId)));
   }
+
+  return updated || null;
+}
+
+// Reactivate employee
+export async function reactivateEmployee(orgId: string, employeeId: string) {
+  const [updated] = await db
+    .update(users)
+    .set({ status: 'active', updatedAt: new Date() })
+    .where(and(eq(users.orgId, orgId), eq(users.id, employeeId)))
+    .returning();
 
   return updated || null;
 }

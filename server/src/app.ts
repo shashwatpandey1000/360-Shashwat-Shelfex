@@ -12,8 +12,12 @@ import authRoutes from './routes/auth.route';
 import lookupsRoutes from './routes/lookups.route';
 import orgRoutes from './routes/org.route';
 import storeRoutes from './routes/store.route';
+import zoneRoutes from './routes/zone.route';
 import employeeRoutes from './routes/employee.route';
 import adminRoutes from './routes/admin.route';
+import scheduleRoutes from './routes/schedule.route';
+import tourRoutes from './routes/tour.route';
+import surveyRoutes from './routes/survey.route';
 
 const app = express();
 
@@ -49,8 +53,12 @@ apiV1.use('/auth', authRoutes);
 apiV1.use('/lookups', lookupsRoutes);
 apiV1.use('/orgs', orgRoutes);
 apiV1.use('/stores', storeRoutes);
+apiV1.use('/zones', zoneRoutes);
 apiV1.use('/employees', employeeRoutes);
 apiV1.use('/admin', adminRoutes);
+apiV1.use('/schedules', scheduleRoutes);
+apiV1.use('/tours', tourRoutes);
+apiV1.use('/surveys', surveyRoutes);
 
 app.use('/api/v1', apiV1);
 

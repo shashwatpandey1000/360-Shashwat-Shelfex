@@ -68,7 +68,7 @@ export default function ComingSoon({ feature, eta, compact }: ComingSoonProps) {
             <CustomButton onClick={handleRetry}>Try again</CustomButton>
             <Link
               href="/dashboard"
-              className="border-brand-purple text-brand-purple hover:bg-brand-purple inline-flex cursor-pointer items-center justify-center gap-2 rounded-none border bg-transparent px-5 py-2.5 text-sm font-medium transition-colors hover:text-white"
+              className="border-brand-purple text-brand-purple hover:bg-brand-purple inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border bg-transparent px-5 py-2.5 text-sm font-medium transition-colors hover:text-white"
             >
               Back to Dashboard
             </Link>

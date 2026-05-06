@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { create, list, detail, update, deactivate } from '../controllers/employee.controller';
+import { create, list, detail, update, deactivate, reactivate } from '../controllers/employee.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { tenantContext } from '../middlewares/tenant.middleware';
 import { requirePermission } from '../middlewares/permission.middleware';
@@ -16,5 +16,6 @@ router.get('/', requirePermission('employees:read'), list);
 router.get('/:id', requirePermission('employees:read'), detail);
 router.patch('/:id', requirePermission('employees:write'), validate(updateEmployeeSchema), update);
 router.post('/:id/deactivate', requirePermission('employees:delete'), deactivate);
+router.post('/:id/reactivate', requirePermission('employees:delete'), reactivate);
 
 export default router;

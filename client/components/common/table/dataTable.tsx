@@ -103,7 +103,7 @@ export function DataTable<T>({
               checked={data.length > 0 && selectedIds.size === data.length}
               onCheckedChange={handleSelectAll}
               aria-label="Select all"
-              className="bg-surface cursor-pointer rounded-none shadow-none"
+              className="bg-surface cursor-pointer rounded-sm shadow-none"
             />
           </div>
         )}
@@ -160,7 +160,7 @@ export function DataTable<T>({
                       checked={isSelected}
                       onCheckedChange={() => handleSelectRow(row)}
                       aria-label="Select row"
-                      className="bg-surface cursor-pointer rounded-none shadow-none"
+                      className="bg-surface cursor-pointer rounded-sm shadow-none"
                     />
                   </div>
                 )}

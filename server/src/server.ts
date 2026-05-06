@@ -2,6 +2,8 @@ import 'dotenv/config';
 import app from './app';
 import validateEnv from './utils/validateEnv';
 import logger from './utils/logger';
+import cron from 'node-cron';
+import { materializeAllOrgs, getMaterializationWindow } from './services/schedule.materializer';
 
 validateEnv();
 
@@ -11,6 +13,23 @@ const SHUTDOWN_TIMEOUT = 10_000; // 10 seconds
 const server = app.listen(PORT, () => {
   logger.info(`🚀 Shelf360 API listening on port ${PORT}`);
 });
+
+// ─── Daily slot materialisation cron (02:00 UTC) ─────────────────────────────
+// Generates schedule instances for the next 14 days across all active templates.
+cron.schedule(
+  '0 2 * * *',
+  async () => {
+    logger.info('[Cron] Slot materialisation starting');
+    try {
+      const { startDate, endDate } = getMaterializationWindow();
+      await materializeAllOrgs(startDate, endDate);
+      logger.info('[Cron] Slot materialisation complete');
+    } catch (err) {
+      logger.error(`[Cron] Slot materialisation failed: ${err}`);
+    }
+  },
+  { timezone: 'UTC' },
+);
 
 const shutdown = (signal: string) => {
   logger.info(`${signal} received: closing HTTP server`);

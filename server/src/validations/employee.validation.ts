@@ -17,13 +17,14 @@ export const updateEmployeeSchema = z.object({
   roleTemplate: z.enum(['org_manager', 'zone_manager', 'store_manager', 'surveyor']).optional(),
   scopeType: z.enum(['org', 'zones', 'stores']).optional(),
   scopeEntityIds: z.array(z.string().uuid()).optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 export type UpdateEmployeeInput = z.infer<typeof updateEmployeeSchema>;
 
 export const listEmployeesSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  perPage: z.coerce.number().int().min(1).max(100).default(25),
+  perPage: z.coerce.number().int().min(1).max(500).default(25),
   search: z.string().optional(),
   roleTemplate: z.enum(['org_manager', 'zone_manager', 'store_manager', 'surveyor']).optional(),
   status: z.enum(['active', 'inactive', 'pending_first_login']).optional(),

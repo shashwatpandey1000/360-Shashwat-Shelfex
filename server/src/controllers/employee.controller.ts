@@ -8,6 +8,7 @@ import {
   getEmployeeById,
   updateEmployee,
   deactivateEmployee,
+  reactivateEmployee,
   assignStoreManager,
 } from '../services/employee.service';
 import { getOrgSettings } from '../services/org.service';
@@ -92,6 +93,22 @@ export const deactivate = asyncHandler(async (req: Request, res: Response) => {
   }
 
   ApiResponse.success(res, updated, 'Employee deactivated');
+});
+
+// POST /employees/:id/reactivate — reactivate a deactivated employee
+// Steps:
+//   1. authMiddleware → tenantContext → requirePermission('employees:delete')
+//   2. Controller: sets status=active
+export const reactivate = asyncHandler(async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const updated = await reactivateEmployee(req.orgId!, id);
+
+  if (!updated) {
+    ApiResponse.notFound(res, 'Employee not found');
+    return;
+  }
+
+  ApiResponse.success(res, updated, 'Employee reactivated');
 });
 
 // POST /stores/:storeId/manager — assign store manager

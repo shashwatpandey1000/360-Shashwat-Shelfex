@@ -214,7 +214,7 @@ export default function PlacesAutocomplete({
         placeholder={placeholder}
         disabled={disabled || !isLoaded}
         className={cn(
-          'flex w-full rounded-none border bg-white px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400',
+          'flex w-full rounded-md border bg-white px-3 py-2 text-[14px] text-gray-900 placeholder:text-gray-400',
           'dark:border-gray-800 dark:bg-[#131313] dark:text-white dark:placeholder:text-gray-500',
           'transition-all duration-200 hover:border-black focus:border-black focus:outline-none',
           'dark:hover:border-white dark:focus:border-white',
