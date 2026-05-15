@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CustomInput } from '@/components/common/input';
 import AddressSummary from '@/components/common/AddressSummary';
-import { lookupsApi } from '@/lib/api/lookups.api';
-import { storesApi } from '@/lib/api/stores.api';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import PlacesAutocomplete, { AddressData } from '@/components/common/PlacesAutocomplete';
@@ -18,6 +16,8 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useStoreCategoriesQuery } from '@/hooks/queries/useLookupQueries';
+import { useUpdateStoreMutation } from '@/hooks/mutations/useStoreMutations';
 
 interface StoreData {
   id: string;
@@ -32,13 +32,12 @@ interface StoreData {
 
 interface EditStoreDialogProps {
   store: StoreData;
-  onUpdated: () => void;
+  onUpdated?: () => void;
   trigger: React.ReactNode;
 }
 
 export default function EditStoreDialog({ store, onUpdated, trigger }: EditStoreDialogProps) {
   const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   const [name, setName] = useState('');
@@ -49,6 +48,16 @@ export default function EditStoreDialog({ store, onUpdated, trigger }: EditStore
   const [contactEmail, setContactEmail] = useState('');
   const [addressData, setAddressData] = useState<AddressData | null>(null);
   const [addressDisplay, setAddressDisplay] = useState('');
+
+  const categoriesQuery = useStoreCategoriesQuery();
+  const updateMutation = useUpdateStoreMutation();
+
+  // Derive categories from query
+  useEffect(() => {
+    if (categoriesQuery.data?.data) {
+      setCategories(categoriesQuery.data.data);
+    }
+  }, [categoriesQuery.data]);
 
   // Populate from store when dialog opens
   useEffect(() => {
@@ -78,8 +87,6 @@ export default function EditStoreDialog({ store, onUpdated, trigger }: EditStore
       setAddressData(null);
       setAddressDisplay('');
     }
-
-    lookupsApi.getStoreCategories().then((res) => setCategories(res.data));
   }, [open, store]);
 
   const handlePhoneChange = (value: string) => {
@@ -94,38 +101,43 @@ export default function EditStoreDialog({ store, onUpdated, trigger }: EditStore
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!name.trim()) return;
-    setSubmitting(true);
-    try {
-      await storesApi.update(store.id, {
-        name: name.trim(),
-        categoryId: categoryId || undefined,
-        timezone: timezone || undefined,
-        contactPhone: contactPhone || undefined,
-        contactEmail: contactEmail || undefined,
-        address: addressData
-          ? {
-              street: addressData.street || undefined,
-              city: addressData.city,
-              state: addressData.state || undefined,
-              postalCode: addressData.postalCode || undefined,
-              country: addressData.country || undefined,
-              formattedAddress: addressData.formattedAddress || undefined,
-            }
-          : undefined,
-        location: addressData?.lat
-          ? { latitude: addressData.lat, longitude: addressData.lng }
-          : undefined,
-      });
-      toast.success('Store updated');
-      setOpen(false);
-      onUpdated();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update store');
-    } finally {
-      setSubmitting(false);
-    }
+    updateMutation.mutate(
+      {
+        id: store.id,
+        data: {
+          name: name.trim(),
+          categoryId: categoryId || undefined,
+          timezone: timezone || undefined,
+          contactPhone: contactPhone || undefined,
+          contactEmail: contactEmail || undefined,
+          address: addressData
+            ? {
+                street: addressData.street || undefined,
+                city: addressData.city,
+                state: addressData.state || undefined,
+                postalCode: addressData.postalCode || undefined,
+                country: addressData.country || undefined,
+                formattedAddress: addressData.formattedAddress || undefined,
+              }
+            : undefined,
+          location: addressData?.lat
+            ? { latitude: addressData.lat, longitude: addressData.lng }
+            : undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Store updated');
+          setOpen(false);
+          onUpdated?.();
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Failed to update store');
+        },
+      },
+    );
   };
 
   return (
@@ -186,9 +198,9 @@ export default function EditStoreDialog({ store, onUpdated, trigger }: EditStore
           <Button
             className="rounded-md"
             onClick={handleSubmit}
-            disabled={!name.trim() || submitting}
+            disabled={!name.trim() || updateMutation.isPending}
           >
-            {submitting ? (
+            {updateMutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
                 Saving...

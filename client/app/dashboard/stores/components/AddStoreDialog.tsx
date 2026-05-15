@@ -5,9 +5,6 @@ import { Button } from '@/components/ui/button';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
 import AddressSummary from '@/components/common/AddressSummary';
-import { lookupsApi } from '@/lib/api/lookups.api';
-import { storesApi } from '@/lib/api/stores.api';
-import { employeesApi } from '@/lib/api/employees.api';
 import { toast } from 'sonner';
 import { Loader2, X } from 'lucide-react';
 import PlacesAutocomplete, { AddressData } from '@/components/common/PlacesAutocomplete';
@@ -19,15 +16,18 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useStoreCategoriesQuery } from '@/hooks/queries/useLookupQueries';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
+import { useCreateStoreMutation } from '@/hooks/mutations/useStoreMutations';
+import { useAssignStoreManagerMutation } from '@/hooks/mutations/useEmployeeMutations';
 
 interface AddStoreDialogProps {
-  onCreated: () => void;
+  onCreated?: () => void;
   trigger: React.ReactNode;
 }
 
 export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogProps) {
   const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   // Store fields
@@ -41,9 +41,6 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
 
   // Manager search (existing employees only)
   const [managerSearch, setManagerSearch] = useState('');
-  const [managerResults, setManagerResults] = useState<
-    { id: string; name: string | null; email: string }[]
-  >([]);
   const [selectedManager, setSelectedManager] = useState<{
     id: string;
     name: string;
@@ -51,30 +48,30 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
   } | null>(null);
   const [showManagerSearch, setShowManagerSearch] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      lookupsApi.getStoreCategories().then((res) => setCategories(res.data));
-    }
-  }, [open]);
+  const categoriesQuery = useStoreCategoriesQuery();
+  const employeesQuery = useEmployeesQuery(
+    { perPage: 10, search: managerSearch },
+  );
 
-  // Debounced employee search
+  const createMutation = useCreateStoreMutation();
+  const assignManagerMutation = useAssignStoreManagerMutation();
+
+  // Derive categories from query
   useEffect(() => {
-    if (!showManagerSearch || managerSearch.length < 2) {
-      setManagerResults([]);
-      return;
+    if (categoriesQuery.data?.data) {
+      setCategories(categoriesQuery.data.data);
     }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await employeesApi.list({ perPage: 10, search: managerSearch });
-        setManagerResults(
-          res.data.data.map((e: any) => ({ id: e.id, name: e.name, email: e.email })),
-        );
-      } catch {
-        /* ignore */
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [managerSearch, showManagerSearch]);
+  }, [categoriesQuery.data]);
+
+  // Derive manager results from query (only when search is active)
+  const managerResults: { id: string; name: string | null; email: string }[] =
+    showManagerSearch && managerSearch.length >= 2
+      ? (employeesQuery.data?.data?.data ?? []).map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          email: e.email,
+        }))
+      : [];
 
   const reset = () => {
     setName('');
@@ -85,7 +82,6 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
     setContactEmail('');
     setTimezone('');
     setManagerSearch('');
-    setManagerResults([]);
     setSelectedManager(null);
     setShowManagerSearch(false);
   };
@@ -94,9 +90,8 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    setSubmitting(true);
-    try {
-      const storeRes = await storesApi.create({
+    createMutation.mutate(
+      {
         name: name.trim(),
         address: {
           street: addressData?.street || undefined,
@@ -113,28 +108,32 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
         contactPhone: contactPhone || undefined,
         contactEmail: contactEmail || undefined,
         timezone: timezone || undefined,
-      });
-
-      // Assign manager if selected
-      if (selectedManager) {
-        try {
-          await employeesApi.assignStoreManager(storeRes.data.id, selectedManager.id);
-        } catch (err: any) {
-          toast.error(
-            `Store created but manager assignment failed: ${err.response?.data?.message || err.message}`,
-          );
-        }
-      }
-
-      toast.success(`Store "${name}" created`);
-      reset();
-      setOpen(false);
-      onCreated();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create store');
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: (storeRes) => {
+          const storeId = storeRes.data.id;
+          if (selectedManager) {
+            assignManagerMutation.mutate(
+              { storeId, employeeId: selectedManager.id },
+              {
+                onError: (err: any) => {
+                  toast.error(
+                    `Store created but manager assignment failed: ${err.response?.data?.message || err.message}`,
+                  );
+                },
+              },
+            );
+          }
+          toast.success(`Store "${name}" created`);
+          reset();
+          setOpen(false);
+          onCreated?.();
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Failed to create store');
+        },
+      },
+    );
   };
 
   return (
@@ -235,7 +234,6 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
                     onClick={() => {
                       setShowManagerSearch(false);
                       setManagerSearch('');
-                      setManagerResults([]);
                     }}
                     className="flex aspect-square items-center rounded-md justify-center px-3 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                   >
@@ -256,7 +254,6 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
                           });
                           setShowManagerSearch(false);
                           setManagerSearch('');
-                          setManagerResults([]);
                         }}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-800"
                       >
@@ -283,8 +280,12 @@ export default function AddStoreDialog({ onCreated, trigger }: AddStoreDialogPro
           <CustomButton variant="secondary" size="sm" onClick={() => setOpen(false)}>
             Cancel
           </CustomButton>
-          <CustomButton size="sm" onClick={handleSubmit} disabled={!canSubmit || submitting}>
-            {submitting ? (
+          <CustomButton
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!canSubmit || createMutation.isPending}
+          >
+            {createMutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
                 Creating...

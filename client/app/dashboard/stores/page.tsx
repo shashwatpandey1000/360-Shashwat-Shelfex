@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import {
@@ -14,11 +14,12 @@ import { MoreHorizontal, Store, Map } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { storesApi } from '@/lib/api/stores.api';
 import StatusBadge from '@/components/common/StatusBadge';
 import AddStoreDialog from './components/AddStoreDialog';
 import BulkImportDialog from './components/BulkImportDialog';
 import MapView from './components/MapView';
+import { useStoresQuery } from '@/hooks/queries/useStoreQueries';
+import { useDeactivateStoreMutation } from '@/hooks/mutations/useStoreMutations';
 
 interface StoreRow {
   id: string;
@@ -48,10 +49,7 @@ function StoresContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [data, setData] = useState<StoreRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,34 +57,7 @@ function StoresContent() {
 
   const isMapView = searchParams.get('view') === 'map';
 
-  // Fetch stores from API (server-side pagination + search)
-  const fetchStores = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await storesApi.list({
-        page: currentPage,
-        perPage,
-        search: search || undefined,
-        status: (statusFilter as any) || undefined,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      });
-      setData(res.data.data);
-      setTotalCount(res.data.total);
-      setTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load stores');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, search, statusFilter]);
-
-  useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
-
   // Debounce search — wait 400ms after typing stops before fetching
-  const [searchInput, setSearchInput] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput);
@@ -94,6 +65,21 @@ function StoresContent() {
     }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  const { data: res, isLoading } = useStoresQuery({
+    page: currentPage,
+    perPage,
+    search: search || undefined,
+    status: (statusFilter as any) || undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+
+  const storeList = res?.data?.data ?? [];
+  const totalCount = res?.data?.total ?? 0;
+  const totalPages = res?.data?.totalPages ?? 1;
+
+  const deactivateMutation = useDeactivateStoreMutation();
 
   const toggleView = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -105,14 +91,11 @@ function StoresContent() {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const handleDeactivate = async (store: StoreRow) => {
-    try {
-      await storesApi.deactivate(store.id);
-      toast.success(`${store.name} deactivated`);
-      fetchStores();
-    } catch {
-      toast.error('Failed to deactivate store');
-    }
+  const handleDeactivate = (store: StoreRow) => {
+    deactivateMutation.mutate(store.id, {
+      onSuccess: () => toast.success(`${store.name} deactivated`),
+      onError: () => toast.error('Failed to deactivate store'),
+    });
   };
 
   const tableConfig: TableConfig<StoreRow> = {
@@ -231,14 +214,8 @@ function StoresContent() {
           </Button>
         </div>
         <div className="flex gap-2">
-          <AddStoreDialog
-            onCreated={fetchStores}
-            trigger={<CustomButton size="sm">Add Store</CustomButton>}
-          />
-          <BulkImportDialog
-            onImported={fetchStores}
-            trigger={<CustomButton size="sm">Add Stores in Bulk</CustomButton>}
-          />
+          <AddStoreDialog trigger={<CustomButton size="sm">Add Store</CustomButton>} />
+          <BulkImportDialog trigger={<CustomButton size="sm">Add Stores in Bulk</CustomButton>} />
         </div>
       </div>
       <div className="flex h-full w-full flex-col px-8 py-4">
@@ -338,10 +315,10 @@ function StoresContent() {
           </div>
         </div>
         {isMapView ? (
-          <MapView data={data} isLoading={isLoading} />
+          <MapView data={storeList} isLoading={isLoading} />
         ) : (
           <DataTable
-            data={data}
+            data={storeList}
             config={tableConfig}
             isLoading={isLoading}
             emptyMessage={search ? 'No stores match your search.' : 'No stores added yet.'}

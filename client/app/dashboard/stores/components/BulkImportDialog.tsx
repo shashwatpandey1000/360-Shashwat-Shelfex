@@ -12,11 +12,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { storesApi } from '@/lib/api/stores.api';
 import type { BulkImportResponse } from '@/lib/api/stores.api';
+import { useBulkImportStoresMutation } from '@/hooks/mutations/useStoreMutations';
 
 interface BulkImportDialogProps {
-  onImported: () => void;
+  onImported?: () => void;
   trigger: React.ReactNode;
 }
 
@@ -120,6 +120,8 @@ export default function BulkImportDialog({ onImported, trigger }: BulkImportDial
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<File | null>(null);
 
+  const bulkImportMutation = useBulkImportStoresMutation();
+
   const validRows = rows.filter((r) => !r.error);
   const invalidRows = rows.filter((r) => r.error);
 
@@ -195,21 +197,22 @@ export default function BulkImportDialog({ onImported, trigger }: BulkImportDial
     if (file) processFile(file);
   }
 
-  async function handleImport() {
+  function handleImport() {
     if (!fileRef.current || validRows.length === 0) return;
     setStep('importing');
-    try {
-      const res = await storesApi.bulkImport(fileRef.current);
-      setResult(res.data);
-      setStep('done');
-      if (res.data.created > 0) {
-        onImported();
-      }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Import failed. Please try again.';
-      toast.error(msg);
-      setStep('preview');
-    }
+    bulkImportMutation.mutate(fileRef.current, {
+      onSuccess: (res) => {
+        setResult(res.data);
+        setStep('done');
+        if (res.data.created > 0) {
+          onImported?.();
+        }
+      },
+      onError: (err: any) => {
+        toast.error(err.response?.data?.message || 'Import failed. Please try again.');
+        setStep('preview');
+      },
+    });
   }
 
   function handleClose(open: boolean) {
