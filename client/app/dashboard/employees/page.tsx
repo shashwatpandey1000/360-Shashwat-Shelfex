@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import {
@@ -14,9 +14,10 @@ import { MoreHorizontal, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { employeesApi } from '@/lib/api/employees.api';
 import StatusBadge from '@/components/common/StatusBadge';
 import AddEmployeeDialog from './components/AddEmployeeDialog';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
+import { useDeactivateEmployeeMutation } from '@/hooks/mutations/useEmployeeMutations';
 
 interface EmployeeRow {
   id: string;
@@ -40,41 +41,11 @@ const ROLE_LABELS: Record<string, string> = {
 export default function EmployeesPage() {
   const router = useRouter();
 
-  const [data, setData] = useState<EmployeeRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  const fetchEmployees = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await employeesApi.list({
-        page: currentPage,
-        perPage,
-        search: search || undefined,
-        roleTemplate: (roleFilter as any) || undefined,
-        status: (statusFilter as any) || undefined,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      });
-      setData(res.data.data);
-      setTotalCount(res.data.total);
-      setTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load employees');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, search, roleFilter, statusFilter]);
-
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
 
   // Debounce search
   const [searchInput, setSearchInput] = useState('');
@@ -86,14 +57,27 @@ export default function EmployeesPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const handleDeactivate = async (emp: EmployeeRow) => {
-    try {
-      await employeesApi.deactivate(emp.id);
-      toast.success(`${emp.name || emp.email} deactivated`);
-      fetchEmployees();
-    } catch {
-      toast.error('Failed to deactivate employee');
-    }
+  const { data: res, isLoading } = useEmployeesQuery({
+    page: currentPage,
+    perPage,
+    search: search || undefined,
+    roleTemplate: (roleFilter as any) || undefined,
+    status: (statusFilter as any) || undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+
+  const employees: EmployeeRow[] = res?.data?.data ?? [];
+  const totalCount = res?.data?.total ?? 0;
+  const totalPages = res?.data?.totalPages ?? 1;
+
+  const deactivateMutation = useDeactivateEmployeeMutation();
+
+  const handleDeactivate = (emp: EmployeeRow) => {
+    deactivateMutation.mutate(emp.id, {
+      onSuccess: () => toast.success(`${emp.name || emp.email} deactivated`),
+      onError: () => toast.error('Failed to deactivate employee'),
+    });
   };
 
   const tableConfig: TableConfig<EmployeeRow> = {
@@ -192,7 +176,6 @@ export default function EmployeesPage() {
           </div>
         </div>
         <AddEmployeeDialog
-          onCreated={fetchEmployees}
           trigger={<CustomButton size="sm">Invite Employee</CustomButton>}
         />
       </div>
@@ -327,7 +310,7 @@ export default function EmployeesPage() {
           </div>
         </div>
         <DataTable
-          data={data}
+          data={employees}
           config={tableConfig}
           isLoading={isLoading}
           emptyMessage={

@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { employeesApi } from '@/lib/api/employees.api';
-import { storesApi } from '@/lib/api/stores.api';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -16,6 +14,8 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useCreateEmployeeMutation } from '@/hooks/mutations/useEmployeeMutations';
+import { useStoresQuery } from '@/hooks/queries/useStoreQueries';
 
 const ALL_ROLE_OPTIONS = [
   { value: 'org_manager', label: 'Organization Manager', minRole: 'org_manager' },
@@ -50,13 +50,12 @@ const ALL_SCOPE_OPTIONS = [
 ];
 
 interface AddEmployeeDialogProps {
-  onCreated: () => void;
+  onCreated?: () => void;
   trigger: React.ReactNode;
 }
 
 export default function AddEmployeeDialog({ onCreated, trigger }: AddEmployeeDialogProps) {
   const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const { accessMap } = useAuth();
 
   // Filter role and scope options based on the caller's role
@@ -76,26 +75,29 @@ export default function AddEmployeeDialog({ onCreated, trigger }: AddEmployeeDia
 
   // Searchable store picker
   const [storeSearch, setStoreSearch] = useState('');
-  const [storeResults, setStoreResults] = useState<{ id: string; name: string }[]>([]);
-  const [storeSearching, setStoreSearching] = useState(false);
+  const [debouncedStoreSearch, setDebouncedStoreSearch] = useState('');
   // Cache selected store names so they show even when search changes
   const [selectedStoreNames, setSelectedStoreNames] = useState<Record<string, string>>({});
 
-  // Debounced store search
+  // Debounce the store search input
   useEffect(() => {
-    if (!open || scopeType !== 'stores') return;
-    const timer = setTimeout(async () => {
-      setStoreSearching(true);
-      try {
-        const res = await storesApi.list({ perPage: 20, search: storeSearch || undefined });
-        setStoreResults(res.data.data.map((s: any) => ({ id: s.id, name: s.name })));
-      } catch {
-        /* ignore */
-      }
-      setStoreSearching(false);
+    const timer = setTimeout(() => {
+      setDebouncedStoreSearch(storeSearch);
     }, 300);
     return () => clearTimeout(timer);
-  }, [storeSearch, open, scopeType]);
+  }, [storeSearch]);
+
+  // TanStack Query for store search — only active when the dialog is open and scope is 'stores'
+  const { data: storeQueryData, isFetching: storeSearching } = useStoresQuery({
+    perPage: 20,
+    search: debouncedStoreSearch || undefined,
+  });
+  const storeResultsEnabled = open && scopeType === 'stores';
+  const storeResults: { id: string; name: string }[] = storeResultsEnabled
+    ? (storeQueryData?.data?.data ?? []).map((s: any) => ({ id: s.id, name: s.name }))
+    : [];
+
+  const createMutation = useCreateEmployeeMutation();
 
   // Auto-set scope based on role
   useEffect(() => {
@@ -115,7 +117,7 @@ export default function AddEmployeeDialog({ onCreated, trigger }: AddEmployeeDia
     setSelectedStoreIds([]);
     setSelectedStoreNames({});
     setStoreSearch('');
-    setStoreResults([]);
+    setDebouncedStoreSearch('');
   };
 
   const canSubmit =
@@ -124,27 +126,29 @@ export default function AddEmployeeDialog({ onCreated, trigger }: AddEmployeeDia
     roleTemplate &&
     (scopeType === 'org' || selectedStoreIds.length > 0);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!canSubmit) return;
-    setSubmitting(true);
-    try {
-      await employeesApi.create({
+    createMutation.mutate(
+      {
         email: email.trim(),
         name: name.trim(),
         phone: phone || undefined,
         roleTemplate: roleTemplate as any,
         scopeType: scopeType as any,
         scopeEntityIds: scopeType !== 'org' ? selectedStoreIds : [],
-      });
-      toast.success(`Employee "${name}" invited`);
-      reset();
-      setOpen(false);
-      onCreated();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create employee');
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Employee "${name}" invited`);
+          reset();
+          setOpen(false);
+          onCreated?.();
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Failed to create employee');
+        },
+      },
+    );
   };
 
   const toggleStore = (storeId: string, storeName: string) => {
@@ -285,8 +289,12 @@ export default function AddEmployeeDialog({ onCreated, trigger }: AddEmployeeDia
           <CustomButton variant="secondary" size="sm" onClick={() => setOpen(false)}>
             Cancel
           </CustomButton>
-          <CustomButton size="sm" onClick={handleSubmit} disabled={!canSubmit || submitting}>
-            {submitting ? (
+          <CustomButton
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!canSubmit || createMutation.isPending}
+          >
+            {createMutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
                 Inviting...
