@@ -1,9 +1,16 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { employeesApi } from '@/lib/api/employees.api';
-import { storesApi } from '@/lib/api/stores.api';
+import { useQueries } from '@tanstack/react-query';
+import { storesApi } from '@/lib/api';
+import { useEmployeeByIdQuery } from '@/hooks/queries/useEmployeeQueries';
+import { useStoresQuery } from '@/hooks/queries/useStoreQueries';
+import {
+  useUpdateEmployeeMutation,
+  useDeactivateEmployeeMutation,
+  useReactivateEmployeeMutation,
+} from '@/hooks/mutations/useEmployeeMutations';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { CustomButton } from '@/components/common/button';
@@ -305,146 +312,136 @@ export default function EmployeeDetailPage() {
   const canEdit = hasPermission('employees:write');
   const canDelete = hasPermission('employees:delete');
 
-  const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const [editingAccess, setEditingAccess] = useState(false);
   const [editRole, setEditRole] = useState('');
   const [editScope, setEditScope] = useState('');
   const [editStoreIds, setEditStoreIds] = useState<string[]>([]);
   const [editStoreNames, setEditStoreNames] = useState<Record<string, string>>({});
-  const [savingAccess, setSavingAccess] = useState(false);
 
   const [storeSearch, setStoreSearch] = useState('');
-  const [storeResults, setStoreResults] = useState<{ id: string; name: string }[]>([]);
   const [showStoreSearch, setShowStoreSearch] = useState(false);
-  const [scopeStoreNames, setScopeStoreNames] = useState<Record<string, string>>({});
 
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [editGroupPerms, setEditGroupPerms] = useState<string[]>([]);
-  const [savingGroup, setSavingGroup] = useState(false);
 
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [deactivateConfirmText, setDeactivateConfirmText] = useState('');
-  const [deactivating, setDeactivating] = useState(false);
-  const [reactivating, setReactivating] = useState(false);
 
-  const fetchEmployee = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await employeesApi.getById(id as string);
-      const data = res.data;
-      setEmployee(data);
-      setEditRole(data.roleTemplate);
-      setEditScope(data.scopeType);
-      setEditStoreIds(data.scopeEntityIds);
-      if (data.scopeType === 'stores' && data.scopeEntityIds.length > 0) {
-        const names: Record<string, string> = {};
-        for (const sid of data.scopeEntityIds) {
-          try {
-            const r = await storesApi.getById(sid);
-            names[sid] = r.data.name;
-          } catch {
-            names[sid] = sid;
-          }
-        }
-        setScopeStoreNames(names);
-        setEditStoreNames(names);
-      }
-    } catch {
+  // Queries
+  const employeeQuery = useEmployeeByIdQuery(id as string);
+  const employee = employeeQuery.data?.data as EmployeeDetail | undefined;
+
+  // Two mutation instances: one for access, one for permissions
+  const accessMutation = useUpdateEmployeeMutation();
+  const permsMutation = useUpdateEmployeeMutation();
+  const deactivateMutation = useDeactivateEmployeeMutation();
+  const reactivateMutation = useReactivateEmployeeMutation();
+
+  // Error redirect
+  useEffect(() => {
+    if (employeeQuery.isError) {
       toast.error('Employee not found');
       router.push('/dashboard/employees');
-    } finally {
-      setLoading(false);
     }
-  }, [id, router]);
+  }, [employeeQuery.isError, router]);
 
-  useEffect(() => {
-    fetchEmployee();
-  }, [fetchEmployee]);
+  // Scope store names via parallel queries
+  const scopeEntityIds =
+    employee?.scopeType === 'stores' ? (employee.scopeEntityIds ?? []) : [];
+  const storeNameQueries = useQueries({
+    queries: scopeEntityIds.map((sid) => ({
+      queryKey: ['store', sid] as const,
+      queryFn: () => storesApi.getById(sid),
+    })),
+  });
+  const scopeStoreNames: Record<string, string> = Object.fromEntries(
+    scopeEntityIds.map((sid, i) => [sid, storeNameQueries[i]?.data?.data?.name ?? sid]),
+  );
 
+  // Debounced store search
+  const [debouncedStoreSearch, setDebouncedStoreSearch] = useState('');
   useEffect(() => {
-    if (!showStoreSearch || storeSearch.length < 2) {
-      setStoreResults([]);
-      return;
-    }
-    const t = setTimeout(async () => {
-      try {
-        const r = await storesApi.list({ perPage: 15, search: storeSearch });
-        setStoreResults(r.data.data.map((s: any) => ({ id: s.id, name: s.name })));
-      } catch {
-        /* ignore */
-      }
-    }, 300);
+    const t = setTimeout(() => setDebouncedStoreSearch(storeSearch), 300);
     return () => clearTimeout(t);
-  }, [storeSearch, showStoreSearch]);
+  }, [storeSearch]);
+
+  const storeSearchQuery = useStoresQuery(
+    showStoreSearch && debouncedStoreSearch.length >= 2
+      ? { perPage: 15, search: debouncedStoreSearch }
+      : undefined,
+  );
+  const storeResults =
+    showStoreSearch && debouncedStoreSearch.length >= 2
+      ? ((storeSearchQuery.data?.data?.data as { id: string; name: string }[] | undefined) ?? [])
+      : [];
 
   const handleSaveAccess = async () => {
     if (!employee) return;
-    setSavingAccess(true);
-    try {
-      await employeesApi.update(employee.id, {
-        roleTemplate: editRole as any,
-        scopeType: editScope as any,
-        scopeEntityIds: editScope !== 'org' ? editStoreIds : [],
-      });
-      toast.success('Access updated');
-      setEditingAccess(false);
-      fetchEmployee();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update');
-    } finally {
-      setSavingAccess(false);
-    }
+    accessMutation.mutate(
+      {
+        id: employee.id,
+        data: {
+          roleTemplate: editRole as any,
+          scopeType: editScope as any,
+          scopeEntityIds: editScope !== 'org' ? editStoreIds : [],
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Access updated');
+          setEditingAccess(false);
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Failed to update');
+        },
+      },
+    );
   };
 
   const handleSaveGroupPerms = async () => {
     if (!employee || !editingGroup) return;
-    setSavingGroup(true);
-    try {
-      const group = PERMISSION_GROUPS.find((g) => g.resource === editingGroup);
-      if (!group) return;
-      const groupPerms = group.actions.map((a) => a.perm);
-      const otherPerms = employee.permissions.filter((p) => !groupPerms.includes(p));
-      await employeesApi.update(employee.id, { permissions: [...otherPerms, ...editGroupPerms] });
-      toast.success('Permissions saved');
-      setEditingGroup(null);
-      fetchEmployee();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to save permissions');
-    } finally {
-      setSavingGroup(false);
-    }
+    const group = PERMISSION_GROUPS.find((g) => g.resource === editingGroup);
+    if (!group) return;
+    const groupPerms = group.actions.map((a) => a.perm);
+    const otherPerms = employee.permissions.filter((p) => !groupPerms.includes(p));
+    permsMutation.mutate(
+      { id: employee.id, data: { permissions: [...otherPerms, ...editGroupPerms] } },
+      {
+        onSuccess: () => {
+          toast.success('Permissions saved');
+          setEditingGroup(null);
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Failed to save permissions');
+        },
+      },
+    );
   };
 
   const handleDeactivate = async () => {
     if (!employee) return;
-    setDeactivating(true);
-    try {
-      await employeesApi.deactivate(employee.id);
-      toast.success('Employee deactivated');
-      setShowDeactivateDialog(false);
-      setDeactivateConfirmText('');
-      fetchEmployee();
-    } catch {
-      toast.error('Failed to deactivate');
-    } finally {
-      setDeactivating(false);
-    }
+    deactivateMutation.mutate(employee.id, {
+      onSuccess: () => {
+        toast.success('Employee deactivated');
+        setShowDeactivateDialog(false);
+        setDeactivateConfirmText('');
+      },
+      onError: () => {
+        toast.error('Failed to deactivate');
+      },
+    });
   };
 
   const handleReactivate = async () => {
     if (!employee) return;
-    setReactivating(true);
-    try {
-      await employeesApi.reactivate(employee.id);
-      toast.success('Employee reactivated');
-      fetchEmployee();
-    } catch {
-      toast.error('Failed to reactivate');
-    } finally {
-      setReactivating(false);
-    }
+    reactivateMutation.mutate(employee.id, {
+      onSuccess: () => {
+        toast.success('Employee reactivated');
+      },
+      onError: () => {
+        toast.error('Failed to reactivate');
+      },
+    });
   };
 
   const addStore = (storeId: string, storeName: string) => {
@@ -453,11 +450,10 @@ export default function EmployeeDetailPage() {
       setEditStoreNames((prev) => ({ ...prev, [storeId]: storeName }));
     }
     setStoreSearch('');
-    setStoreResults([]);
     setShowStoreSearch(false);
   };
 
-  if (loading) return <PageLoader />;
+  if (employeeQuery.isLoading) return <PageLoader />;
   if (!employee) return null;
 
   const activeScopeType = editingAccess ? editScope : employee.scopeType;
@@ -494,9 +490,9 @@ export default function EmployeeDetailPage() {
               size="sm"
               className="rounded-md border border-gray-300 text-xs text-green-700 hover:border-green-500 hover:bg-green-50 dark:border-gray-700 dark:text-green-400 dark:hover:border-green-800 dark:hover:bg-green-950/30"
               onClick={handleReactivate}
-              disabled={reactivating}
+              disabled={reactivateMutation.isPending}
             >
-              {reactivating ? (
+              {reactivateMutation.isPending ? (
                 <Loader2 size={14} className="animate-spin" />
               ) : (
                 <RotateCcw size={14} />
@@ -652,13 +648,17 @@ export default function EmployeeDetailPage() {
                       >
                         Cancel
                       </Button>
-                      <CustomButton size="sm" onClick={handleSaveGroupPerms} disabled={savingGroup}>
-                        {savingGroup ? (
+                      <CustomButton
+                        size="sm"
+                        onClick={handleSaveGroupPerms}
+                        disabled={permsMutation.isPending}
+                      >
+                        {permsMutation.isPending ? (
                           <Loader2 size={13} className="animate-spin" />
                         ) : (
                           <Save size={13} />
                         )}
-                        {savingGroup ? 'Saving…' : 'Save'}
+                        {permsMutation.isPending ? 'Saving…' : 'Save'}
                       </CustomButton>
                     </div>
                   )}
@@ -710,7 +710,13 @@ export default function EmployeeDetailPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setEditingAccess(true)}
+                  onClick={() => {
+                    setEditRole(employee.roleTemplate);
+                    setEditScope(employee.scopeType);
+                    setEditStoreIds(employee.scopeEntityIds);
+                    setEditStoreNames(scopeStoreNames);
+                    setEditingAccess(true);
+                  }}
                   className={sidebarEditButtonClass}
                 >
                   <Pencil size={13} />
@@ -760,7 +766,6 @@ export default function EmployeeDetailPage() {
                       setEditStoreIds(employee.scopeEntityIds);
                       setEditStoreNames(scopeStoreNames);
                       setStoreSearch('');
-                      setStoreResults([]);
                       setShowStoreSearch(false);
                     }}
                   >
@@ -769,10 +774,10 @@ export default function EmployeeDetailPage() {
                   <CustomButton
                     size="sm"
                     onClick={handleSaveAccess}
-                    disabled={savingAccess}
+                    disabled={accessMutation.isPending}
                     className="h-9 flex-1 px-3 text-[13px]"
                   >
-                    {savingAccess ? (
+                    {accessMutation.isPending ? (
                       <Loader2 size={13} className="animate-spin" />
                     ) : (
                       <Save size={13} />
@@ -794,7 +799,13 @@ export default function EmployeeDetailPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setEditingAccess(true)}
+                  onClick={() => {
+                    setEditRole(employee.roleTemplate);
+                    setEditScope(employee.scopeType);
+                    setEditStoreIds(employee.scopeEntityIds);
+                    setEditStoreNames(scopeStoreNames);
+                    setEditingAccess(true);
+                  }}
                   className={sidebarEditButtonClass}
                 >
                   <Pencil size={13} />
@@ -918,6 +929,50 @@ export default function EmployeeDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Deactivate Dialog */}
+      <Dialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deactivate Employee</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Type <span className="font-mono font-semibold">DEACTIVATE</span> to confirm.
+          </p>
+          <input
+            type="text"
+            value={deactivateConfirmText}
+            onChange={(e) => setDeactivateConfirmText(e.target.value)}
+            placeholder="DEACTIVATE"
+            className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-[13px] text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-100 dark:placeholder:text-gray-600"
+          />
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowDeactivateDialog(false);
+                setDeactivateConfirmText('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeactivate}
+              disabled={deactivateConfirmText !== 'DEACTIVATE' || deactivateMutation.isPending}
+            >
+              {deactivateMutation.isPending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Trash2 size={14} />
+              )}
+              Deactivate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
