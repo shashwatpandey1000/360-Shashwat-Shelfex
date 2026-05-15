@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { storesApi } from '@/lib/api/stores.api';
-import { lookupsApi } from '@/lib/api/lookups.api';
-import { employeesApi } from '@/lib/api/employees.api';
+import { useQuery } from '@tanstack/react-query';
+import { employeesApi } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { CustomInput } from '@/components/common/input';
@@ -17,11 +16,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import StatusBadge from '@/components/common/StatusBadge';
 import PageLoader from '@/components/common/PageLoader';
-import ComingSoon from '@/components/common/ComingSoon';
 import EditStoreDialog from '../components/EditStoreDialog';
 import StoreScheduleTab from '../components/StoreScheduleTab';
 import StoreSurveysTab from '../components/StoreSurveysTab';
-import { toursApi } from '@/lib/api/tours.api';
 import type { Tour } from '@/lib/api/tours.api';
 import { toast } from 'sonner';
 import { MapPin, MoreHorizontal, Pencil, Store, Trash2, Users } from 'lucide-react';
@@ -29,6 +26,11 @@ import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import { GOOGLE_MAPS_CONFIG } from '@/lib/google-maps';
 import { STORE_PIN_COLOR, STORE_PIN_PATH, storeMapStyles } from '@/lib/google-maps-styles';
 import { cn } from '@/lib/utils';
+import { useStoreByIdQuery } from '@/hooks/queries/useStoreQueries';
+import { useActiveStoreTourQuery } from '@/hooks/queries/useTourQueries';
+import { useStoreCategoriesQuery } from '@/hooks/queries/useLookupQueries';
+import { useDeactivateStoreMutation } from '@/hooks/mutations/useStoreMutations';
+import { useDeactivateEmployeeMutation } from '@/hooks/mutations/useEmployeeMutations';
 
 interface StoreDetail {
   id: string;
@@ -116,97 +118,90 @@ export default function StoreDetailPage() {
   const canWriteSchedule = hasPermission('schedule:write');
   const canManageSchedule = hasPermission('employees:manage');
 
-  const [store, setStore] = useState<StoreDetail | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('Overview');
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-
-  const [employees, setEmployees] = useState<EmployeeRow[]>([]);
-  const [empTotal, setEmpTotal] = useState(0);
-  const [empTotalPages, setEmpTotalPages] = useState(1);
   const [empPage, setEmpPage] = useState(1);
   const [empSearch, setEmpSearch] = useState('');
   const [empSearchInput, setEmpSearchInput] = useState('');
-  const [empLoading, setEmpLoading] = useState(false);
 
-  // Tour state
-  const [activeTour, setActiveTour] = useState<Tour | null | undefined>(undefined); // undefined = not loaded
   const { isLoaded: mapsLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
-  const fetchStore = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await storesApi.getById(id as string);
-      setStore(res.data);
-    } catch {
-      toast.error('Store not found');
-      router.push('/dashboard/stores');
-    } finally {
-      setLoading(false);
-    }
-  }, [id, router]);
+  // Queries
+  const storeQuery = useStoreByIdQuery(id as string);
+  const store = storeQuery.data?.data as StoreDetail | undefined;
 
-  const fetchEmployees = useCallback(async () => {
-    if (!id) return;
-    setEmpLoading(true);
-    try {
-      const res = await employeesApi.list({
+  const tourQuery = useActiveStoreTourQuery(id as string);
+  const activeTour: Tour | null | undefined = tourQuery.isLoading
+    ? undefined
+    : (tourQuery.data?.data ?? null);
+
+  const categoriesQuery = useStoreCategoriesQuery();
+  const categories =
+    (categoriesQuery.data?.data as { id: string; name: string }[] | undefined) ?? [];
+
+  const employeesQuery = useQuery({
+    queryKey: [
+      'employees',
+      {
+        storeId: id,
+        page: empPage,
+        perPage: 25,
+        search: empSearch || undefined,
+        sortBy: 'roleTemplate',
+        sortOrder: 'asc',
+      },
+    ],
+    queryFn: () =>
+      employeesApi.list({
         storeId: id as string,
         page: empPage,
         perPage: 25,
         search: empSearch || undefined,
         sortBy: 'roleTemplate',
         sortOrder: 'asc',
-      });
-      setEmployees(res.data.data);
-      setEmpTotal(res.data.total);
-      setEmpTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load employees');
-    } finally {
-      setEmpLoading(false);
-    }
-  }, [id, empPage, empSearch]);
+      }),
+    enabled: activeTab === 'Employees',
+    placeholderData: (prev: any) => prev,
+  });
 
-  const fetchTour = useCallback(async () => {
-    if (!id) return;
-    try {
-      const res = await toursApi.getActiveForStore(id as string);
-      setActiveTour(res.data);
-    } catch {
-      setActiveTour(null);
-    }
-  }, [id]);
+  const employees = (employeesQuery.data?.data?.data as EmployeeRow[] | undefined) ?? [];
+  const empTotal = (employeesQuery.data?.data?.total as number | undefined) ?? 0;
+  const empTotalPages = (employeesQuery.data?.data?.totalPages as number | undefined) ?? 1;
+  const empLoading = employeesQuery.isLoading && activeTab === 'Employees';
 
-  useEffect(() => { fetchStore(); }, [fetchStore]);
-  useEffect(() => { fetchTour(); }, [fetchTour]);
-  useEffect(() => { lookupsApi.getStoreCategories().then((r) => setCategories(r.data)); }, []);
-  useEffect(() => { if (activeTab === 'Employees') fetchEmployees(); }, [activeTab, fetchEmployees]);
+  // Mutations
+  const deactivateStoreMutation = useDeactivateStoreMutation();
+  const deactivateEmployeeMutation = useDeactivateEmployeeMutation();
 
+  // Redirect on store not found
   useEffect(() => {
-    const t = setTimeout(() => { setEmpSearch(empSearchInput); setEmpPage(1); }, 400);
+    if (storeQuery.isError) {
+      toast.error('Store not found');
+      router.push('/dashboard/stores');
+    }
+  }, [storeQuery.isError, router]);
+
+  // Debounce employee search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setEmpSearch(empSearchInput);
+      setEmpPage(1);
+    }, 400);
     return () => clearTimeout(t);
   }, [empSearchInput]);
 
   const handleDeactivate = async () => {
     if (!store) return;
-    try {
-      await storesApi.deactivate(store.id);
-      toast.success('Store deactivated');
-      fetchStore();
-    } catch {
-      toast.error('Failed to deactivate');
-    }
+    deactivateStoreMutation.mutate(store.id, {
+      onSuccess: () => toast.success('Store deactivated'),
+      onError: () => toast.error('Failed to deactivate'),
+    });
   };
 
   const handleDeactivateEmployee = async (emp: EmployeeRow) => {
-    try {
-      await employeesApi.deactivate(emp.id);
-      toast.success(`${emp.name || emp.email} deactivated`);
-      fetchEmployees();
-    } catch {
-      toast.error('Failed to deactivate employee');
-    }
+    deactivateEmployeeMutation.mutate(emp.id, {
+      onSuccess: () => toast.success(`${emp.name || emp.email} deactivated`),
+      onError: () => toast.error('Failed to deactivate employee'),
+    });
   };
 
   const empTableConfig: TableConfig<EmployeeRow> = {
@@ -281,7 +276,7 @@ export default function StoreDetailPage() {
     ),
   };
 
-  if (loading) return <PageLoader />;
+  if (storeQuery.isLoading) return <PageLoader />;
   if (!store) return null;
 
   const addr = store.address;
@@ -397,7 +392,7 @@ export default function StoreDetailPage() {
                 {canEdit && (
                   <EditStoreDialog
                     store={store}
-                    onUpdated={fetchStore}
+                    onUpdated={() => {}}
                     trigger={
                       <button className={sidebarEditButtonClass}>
                         <Pencil size={13} />
