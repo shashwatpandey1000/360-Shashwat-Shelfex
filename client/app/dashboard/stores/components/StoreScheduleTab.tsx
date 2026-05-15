@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { scheduleApi } from '@/lib/api/schedule.api';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { ScheduleSlot, SlotStatus, TemplateWithRules } from '@/lib/api/schedule.api';
+import { employeesApi } from '@/lib/api';
+import { useStoreEffectiveTemplateQuery, useScheduleTemplateQuery, useScheduleSlotsQuery } from '@/hooks/queries/useScheduleQueries';
+import { useMaterializeTemplateMutation, useAssignSurveyorMutation } from '@/hooks/mutations/useScheduleMutations';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import StatusBadge from '@/components/common/StatusBadge';
-import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +23,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { employeesApi } from '@/lib/api/employees.api';
 import { toast } from 'sonner';
 import { MoreHorizontal, RefreshCw, CalendarDays, User, Loader2 } from 'lucide-react';
 import TemplateCard from '@/components/schedule/TemplateCard';
@@ -32,12 +33,6 @@ interface StoreScheduleTabProps {
   storeTimezone: string | null;
   canWrite: boolean;
   canManage: boolean;
-}
-
-interface Surveyor {
-  id: string;
-  name: string | null;
-  email: string;
 }
 
 const STATUS_OPTIONS: SlotStatus[] = [
@@ -66,125 +61,87 @@ export default function StoreScheduleTab({
   canWrite,
   canManage,
 }: StoreScheduleTabProps) {
-  // ── Template state ──────────────────────────────────────────────────────
-  const [template, setTemplate] = useState<TemplateWithRules | null | 'none'>('none');
-  const [templateLoading, setTemplateLoading] = useState(true);
+  // ── UI state ────────────────────────────────────────────────────────────
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TemplateWithRules | undefined>();
-  const [materializing, setMaterializing] = useState(false);
-
-  // ── Slot state ──────────────────────────────────────────────────────────
-  const [slots, setSlots] = useState<ScheduleSlot[]>([]);
-  const [slotsTotal, setSlotsTotal] = useState(0);
-  const [slotsTotalPages, setSlotsTotalPages] = useState(1);
   const [slotsPage, setSlotsPage] = useState(1);
-  const [slotsLoading, setSlotsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<SlotStatus | ''>('');
   const [dateFrom, setDateFrom] = useState(todayStr());
   const [dateTo, setDateTo] = useState(plusDays(14));
-
-  // ── Assign dialog ───────────────────────────────────────────────────────
   const [assignSlot, setAssignSlot] = useState<ScheduleSlot | null>(null);
-  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [surveyorSearch, setSurveyorSearch] = useState('');
   const [selectedSurveyor, setSelectedSurveyor] = useState('');
-  const [assigning, setAssigning] = useState(false);
 
-  // ── Fetch template ──────────────────────────────────────────────────────
-  const fetchTemplate = useCallback(async () => {
-    setTemplateLoading(true);
-    try {
-      const res = await scheduleApi.getStoreEffectiveTemplate(storeId);
-      if (res.data) {
-        // Load full template with rules
-        const full = await scheduleApi.getTemplate(res.data.id);
-        setTemplate(full.data);
-      } else {
-        setTemplate(null);
-      }
-    } catch {
-      setTemplate(null);
-    } finally {
-      setTemplateLoading(false);
-    }
-  }, [storeId]);
+  // ── Template queries ────────────────────────────────────────────────────
+  const effectiveTemplateQuery = useStoreEffectiveTemplateQuery(storeId);
+  const effectiveTemplateId = (effectiveTemplateQuery.data?.data as { id: string } | null)?.id ?? '';
+  const templateQuery = useScheduleTemplateQuery(effectiveTemplateId);
 
-  // ── Fetch slots ─────────────────────────────────────────────────────────
-  const fetchSlots = useCallback(async () => {
-    setSlotsLoading(true);
-    try {
-      const res = await scheduleApi.listSlots({
-        storeId,
-        page: slotsPage,
-        perPage: 25,
-        dateFrom,
-        dateTo,
-        status: statusFilter || undefined,
-        sortOrder: 'asc',
-      });
-      setSlots(res.data.data);
-      setSlotsTotal(res.data.total);
-      setSlotsTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load slots');
-    } finally {
-      setSlotsLoading(false);
-    }
-  }, [storeId, slotsPage, dateFrom, dateTo, statusFilter]);
+  const templateLoading = effectiveTemplateQuery.isLoading;
+  const template: TemplateWithRules | null | undefined =
+    effectiveTemplateId
+      ? (templateQuery.data?.data as TemplateWithRules | undefined)
+      : effectiveTemplateQuery.isSuccess
+        ? null
+        : undefined;
 
-  useEffect(() => { fetchTemplate(); }, [fetchTemplate]);
-  useEffect(() => { fetchSlots(); }, [fetchSlots]);
+  // ── Slots query ─────────────────────────────────────────────────────────
+  const slotsQuery = useScheduleSlotsQuery({
+    storeId,
+    page: slotsPage,
+    perPage: 25,
+    dateFrom,
+    dateTo,
+    status: statusFilter || undefined,
+    sortOrder: 'asc',
+  });
+  const slots = (slotsQuery.data?.data?.data as ScheduleSlot[] | undefined) ?? [];
+  const slotsTotal = (slotsQuery.data?.data?.total as number | undefined) ?? 0;
+  const slotsTotalPages = (slotsQuery.data?.data?.totalPages as number | undefined) ?? 1;
+  const slotsLoading = slotsQuery.isLoading;
 
-  // ── Surveyor search ─────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!assignSlot) return;
-    const t = setTimeout(async () => {
-      try {
-        const res = await employeesApi.list({
-          storeId,
-          search: surveyorSearch || undefined,
-          roleTemplate: 'surveyor',
-          perPage: 20,
-        });
-        setSurveyors(res.data.data);
-      } catch { /* ignore */ }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [surveyorSearch, assignSlot, storeId]);
+  // ── Surveyor search query (only when assign dialog is open) ─────────────
+  const surveyorQuery = useQuery({
+    queryKey: ['employees', { storeId, search: surveyorSearch || undefined, roleTemplate: 'surveyor', perPage: 20 }],
+    queryFn: () => employeesApi.list({ storeId, search: surveyorSearch || undefined, roleTemplate: 'surveyor', perPage: 20 }),
+    enabled: !!assignSlot,
+    placeholderData: (prev: any) => prev,
+  });
+  const surveyors = (surveyorQuery.data?.data?.data as Array<{ id: string; name: string | null; email: string }> | undefined) ?? [];
+
+  // ── Mutations ───────────────────────────────────────────────────────────
+  const materializeMutation = useMaterializeTemplateMutation();
+  const assignMutation = useAssignSurveyorMutation();
 
   // ── Handlers ────────────────────────────────────────────────────────────
-  const handleMaterialize = async () => {
-    if (!template || template === 'none') return;
-    setMaterializing(true);
-    try {
-      const res = await scheduleApi.materialize(template.id);
-      toast.success(`${res.data.created} slots created, ${res.data.skipped} already existed`);
-      fetchSlots();
-    } catch {
-      toast.error('Failed to regenerate slots');
-    } finally {
-      setMaterializing(false);
-    }
+  const handleMaterialize = () => {
+    if (!template || !effectiveTemplateId) return;
+    materializeMutation.mutate(effectiveTemplateId, {
+      onSuccess: (res) => {
+        toast.success(`${res.data.created} slots created, ${res.data.skipped} already existed`);
+      },
+      onError: () => {
+        toast.error('Failed to regenerate slots');
+      },
+    });
   };
 
-  const handleAssign = async () => {
+  const handleAssign = () => {
     if (!assignSlot || !selectedSurveyor) return;
-    setAssigning(true);
-    try {
-      await scheduleApi.assignSurveyor(assignSlot.id, selectedSurveyor);
-      toast.success('Surveyor assigned');
-      setAssignSlot(null);
-      setSelectedSurveyor('');
-      fetchSlots();
-    } catch (err: any) {
-      if (err.response?.data?.data?.conflict) {
-        toast.error('Surveyor has a conflicting slot at that time');
-      } else {
-        toast.error(err.response?.data?.message || 'Failed to assign');
-      }
-    } finally {
-      setAssigning(false);
-    }
+    assignMutation.mutate({ slotId: assignSlot.id, surveyorId: selectedSurveyor }, {
+      onSuccess: () => {
+        toast.success('Surveyor assigned');
+        setAssignSlot(null);
+        setSelectedSurveyor('');
+      },
+      onError: (err: any) => {
+        if (err.response?.data?.data?.conflict) {
+          toast.error('Surveyor has a conflicting slot at that time');
+        } else {
+          toast.error(err.response?.data?.message || 'Failed to assign');
+        }
+      },
+    });
   };
 
   // ── Table config ────────────────────────────────────────────────────────
@@ -276,16 +233,16 @@ export default function StoreScheduleTab({
             Active Template
           </h2>
           <div className="flex gap-2">
-            {canWrite && template && template !== 'none' && (
+            {canWrite && !!template && (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-7 rounded-none border border-gray-200 px-3 text-xs dark:border-gray-700"
                   onClick={handleMaterialize}
-                  disabled={materializing}
+                  disabled={materializeMutation.isPending}
                 >
-                  {materializing
+                  {materializeMutation.isPending
                     ? <Loader2 size={13} className="animate-spin" />
                     : <RefreshCw size={13} />}
                   Regenerate Slots
@@ -295,7 +252,7 @@ export default function StoreScheduleTab({
                   size="sm"
                   className="h-7 rounded-none border border-gray-200 px-3 text-xs dark:border-gray-700"
                   onClick={() => {
-                    setEditingTemplate(template as TemplateWithRules);
+                    setEditingTemplate(template);
                     setBuilderOpen(true);
                   }}
                 >
@@ -303,7 +260,7 @@ export default function StoreScheduleTab({
                 </Button>
               </>
             )}
-            {canWrite && !templateLoading && (template === null) && (
+            {canWrite && !templateLoading && !template && (
               <CustomButton
                 size="sm"
                 onClick={() => {
@@ -319,10 +276,10 @@ export default function StoreScheduleTab({
 
         {templateLoading ? (
           <p className="py-4 text-sm text-gray-400 dark:text-gray-500">Loading template…</p>
-        ) : template && template !== 'none' ? (
+        ) : template ? (
           <TemplateCard
-            template={template as TemplateWithRules}
-            isDefault={(template as TemplateWithRules).storeId === null}
+            template={template}
+            isDefault={template.storeId === null}
             canWrite={false}
             onEdit={() => {}}
             onDelete={() => {}}
@@ -472,9 +429,9 @@ export default function StoreScheduleTab({
               <CustomButton
                 size="sm"
                 onClick={handleAssign}
-                disabled={!selectedSurveyor || assigning}
+                disabled={!selectedSurveyor || assignMutation.isPending}
               >
-                {assigning && <Loader2 size={13} className="animate-spin" />}
+                {assignMutation.isPending && <Loader2 size={13} className="animate-spin" />}
                 Assign
               </CustomButton>
               <Button
@@ -496,10 +453,7 @@ export default function StoreScheduleTab({
         onOpenChange={setBuilderOpen}
         template={editingTemplate}
         storeId={storeId}
-        onSaved={() => {
-          fetchTemplate();
-          fetchSlots();
-        }}
+        onSaved={() => {}}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQueryClient } from '@tanstack/react-query';
 import { scheduleApi } from '@/lib/api/schedule.api';
 import type { TemplateWithRules, RecurrenceRule } from '@/lib/api/schedule.api';
 
@@ -132,6 +133,7 @@ export default function TemplateBuilderDialog({
   onSaved,
 }: TemplateBuilderDialogProps) {
   const isEdit = !!template;
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState('Asia/Kolkata');
@@ -337,6 +339,9 @@ export default function TemplateBuilderDialog({
       }
 
       toast.success(isEdit ? 'Template updated' : 'Template created');
+      queryClient.invalidateQueries({ queryKey: ['scheduleTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleTemplate'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleSlots'] });
       onSaved();
       onOpenChange(false);
     } catch (err: unknown) {
