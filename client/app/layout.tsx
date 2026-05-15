@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/common/theme-provider';
 import { Toaster } from 'sonner';
+import TanstackProvider from '@/providers/TanstackProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,7 +36,9 @@ export default function RootLayout({
           storageKey="shelf360-theme"
           disableTransitionOnChange
         >
-          <AuthProvider>{children}</AuthProvider>
+          <TanstackProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </TanstackProvider>
           <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </body>
