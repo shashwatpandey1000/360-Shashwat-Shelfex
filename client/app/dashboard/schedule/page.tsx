@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { PlusCircle, Globe, RefreshCw, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,11 @@ import { scheduleApi } from '@/lib/api/schedule.api';
 import type { TemplateWithRules } from '@/lib/api/schedule.api';
 import TemplateCard from '@/components/schedule/TemplateCard';
 import TemplateBuilderDialog from '@/components/schedule/TemplateBuilderDialog';
+import { useScheduleTemplatesQuery } from '@/hooks/queries/useScheduleQueries';
+import {
+  useMaterializeTemplateMutation,
+  useDeleteTemplateMutation,
+} from '@/hooks/mutations/useScheduleMutations';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -18,57 +24,49 @@ export default function SchedulePage() {
   const canWrite = hasPermission('schedule:write');
   const canManageEmployees = hasPermission('employees:manage');
 
-  const [templates, setTemplates] = useState<TemplateWithRules[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TemplateWithRules | undefined>();
-  const [materializing, setMaterializing] = useState<string | null>(null);
 
   const isOrgScope = accessMap?.scopeType === 'org';
 
-  const fetchTemplates = useCallback(async () => {
-    setLoading(true);
-    try {
-      const list = await scheduleApi.listTemplates();
-      const detailed = await Promise.all(
-        list.data.map((t) => scheduleApi.getTemplate(t.id).then((r) => r.data)),
-      );
-      setTemplates(detailed);
-    } catch {
-      toast.error('Failed to load schedule templates');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: listData, isLoading: listLoading } = useScheduleTemplatesQuery();
+  const templateIds = listData?.data?.map((t) => t.id) ?? [];
 
-  useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
+  const detailQueries = useQueries({
+    queries: templateIds.map((id) => ({
+      queryKey: ['scheduleTemplate', id],
+      queryFn: () => scheduleApi.getTemplate(id),
+      enabled: templateIds.length > 0,
+    })),
+  });
 
-  const handleMaterialize = async (templateId: string) => {
-    setMaterializing(templateId);
-    try {
-      const res = await scheduleApi.materialize(templateId);
-      toast.success(
-        `Slots regenerated: ${res.data.created} created, ${res.data.skipped} already existed`,
-      );
-    } catch {
-      toast.error('Failed to regenerate slots');
-    } finally {
-      setMaterializing(null);
-    }
+  const templates: TemplateWithRules[] = detailQueries
+    .map((q) => q.data?.data)
+    .filter(Boolean) as TemplateWithRules[];
+
+  const loading = listLoading || detailQueries.some((q) => q.isLoading);
+
+  const materializeMutation = useMaterializeTemplateMutation();
+  const deleteMutation = useDeleteTemplateMutation();
+
+  const materializing = materializeMutation.isPending ? materializeMutation.variables : null;
+
+  const handleMaterialize = (templateId: string) => {
+    materializeMutation.mutate(templateId, {
+      onSuccess: (res) =>
+        toast.success(
+          `Slots regenerated: ${res.data.created} created, ${res.data.skipped} already existed`,
+        ),
+      onError: () => toast.error('Failed to regenerate slots'),
+    });
   };
 
-  const handleDelete = async (templateId: string) => {
+  const handleDelete = (templateId: string) => {
     if (!confirm('Delete this template? Future pending slots will be cancelled.')) return;
-    try {
-      await scheduleApi.deleteTemplate(templateId);
-      toast.success('Template deleted');
-      fetchTemplates();
-    } catch {
-      toast.error('Failed to delete template');
-    }
+    deleteMutation.mutate(templateId, {
+      onSuccess: () => toast.success('Template deleted'),
+      onError: () => toast.error('Failed to delete template'),
+    });
   };
 
   const openEdit = (template: TemplateWithRules) => {
@@ -220,7 +218,7 @@ export default function SchedulePage() {
         open={builderOpen}
         onOpenChange={setBuilderOpen}
         template={editingTemplate}
-        onSaved={fetchTemplates}
+        onSaved={() => {}}
       />
     </section>
   );
