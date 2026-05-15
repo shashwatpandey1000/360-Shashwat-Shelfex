@@ -3,8 +3,8 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { orgApi } from '@/lib/api/org.api';
-import { lookupsApi } from '@/lib/api/lookups.api';
+import { useIndustriesQuery } from '@/hooks/queries/useLookupQueries';
+import { useRegisterOrgMutation } from '@/hooks/mutations/useOrgMutations';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
 import { validatePhone } from '@/lib/phone';
@@ -24,8 +24,9 @@ export default function OnboardingPage() {
   const { user, accessMap, isLoading, needsOnboarding, refreshUser } = useAuth();
   const router = useRouter();
 
-  const [industries, setIndustries] = useState<Industry[]>([]);
-  const [submitting, setSubmitting] = useState(false);
+  const { data: industriesRes } = useIndustriesQuery();
+  const industries = (industriesRes?.data ?? []) as Industry[];
+  const registerMutation = useRegisterOrgMutation();
 
   const [orgName, setOrgName] = useState('');
   const [orgType, setOrgType] = useState<'chain' | 'single_store'>('single_store');
@@ -48,15 +49,6 @@ export default function OnboardingPage() {
     }
   }, [isLoading, needsOnboarding, accessMap, router]);
 
-  useEffect(() => {
-    lookupsApi
-      .getIndustries()
-      .then((res) => {
-        setIndustries(res.data || []);
-      })
-      .catch(() => {});
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orgName.trim() || !industryId) {
@@ -71,26 +63,28 @@ export default function OnboardingPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      await orgApi.register({
+    registerMutation.mutate(
+      {
         orgName: orgName.trim(),
         orgType,
         industryId,
         website: website.trim() || undefined,
         contactPhone: contactPhone.trim() || undefined,
         hqAddress: hqAddress || undefined,
-      });
-      await refreshUser();
-      router.replace('/onboarding/pending');
-    } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Registration failed. Please try again.';
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: async () => {
+          await refreshUser();
+          router.replace('/onboarding/pending');
+        },
+        onError: (err: unknown) => {
+          const message =
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            'Registration failed. Please try again.';
+          toast.error(message);
+        },
+      },
+    );
   };
 
   if (isLoading || !needsOnboarding) {
@@ -206,8 +200,8 @@ export default function OnboardingPage() {
       </div>
 
       <footer className="flex h-16 shrink-0 items-center justify-end border-t border-gray-200 px-8 dark:border-gray-800">
-        <CustomButton type="submit" disabled={submitting}>
-          {submitting ? 'Submitting…' : 'Submit for review'}
+        <CustomButton type="submit" disabled={registerMutation.isPending}>
+          {registerMutation.isPending ? 'Submitting…' : 'Submit for review'}
         </CustomButton>
       </footer>
     </form>

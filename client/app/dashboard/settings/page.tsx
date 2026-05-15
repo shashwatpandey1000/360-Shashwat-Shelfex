@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { orgApi, lookupsApi } from '@/lib/api';
+import { useOrgSettingsQuery } from '@/hooks/queries/useOrgQueries';
+import { useUpdateOrgSettingsMutation } from '@/hooks/mutations/useOrgMutations';
+import { useIndustriesQuery } from '@/hooks/queries/useLookupQueries';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
 import { Loader2, Save, Settings } from 'lucide-react';
@@ -51,9 +53,14 @@ export default function SettingsPage() {
   const canEdit = hasPermission('settings:write');
   const { theme, setTheme } = useTheme();
 
-  const [org, setOrg] = useState<OrgSettings | null>(null);
-  const [industries, setIndustries] = useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: orgRes, isLoading: orgLoading } = useOrgSettingsQuery();
+  const { data: industriesRes } = useIndustriesQuery();
+  const updateMutation = useUpdateOrgSettingsMutation();
+
+  const org = orgRes?.data as OrgSettings | undefined;
+  const industries = industriesRes?.data ?? [];
+  const loading = orgLoading;
+
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -112,48 +119,41 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    Promise.all([orgApi.getSettings(), lookupsApi.getIndustries()])
-      .then(([settingsRes, industriesRes]) => {
-        const data = settingsRes.data as OrgSettings;
-        setOrg(data);
-        setName(data.name);
-        setWebsite(data.website || '');
-        setContactPhone(data.contactPhone || '');
-        setCountry(data.country);
-        setCurrency(data.currency);
-        setTimezone(data.timezone);
-        setDefaultLanguage(data.defaultLanguage || 'en');
-        setIndustryId(data.industryId || '');
+    if (!org) return;
+    setName(org.name);
+    setWebsite(org.website || '');
+    setContactPhone(org.contactPhone || '');
+    setCountry(org.country);
+    setCurrency(org.currency);
+    setTimezone(org.timezone);
+    setDefaultLanguage(org.defaultLanguage || 'en');
+    setIndustryId(org.industryId || '');
 
-        if (data.hqAddress) {
-          const addr = data.hqAddress as any;
-          setHqAddress({
-            street: addr.street || '',
-            city: addr.city || '',
-            state: addr.state || '',
-            postalCode: addr.postalCode || '',
-            country: addr.country || '',
-            formattedAddress: addr.formattedAddress || '',
-            lat: addr.lat || 0,
-            lng: addr.lng || 0,
-          });
-          setAddressDisplay(
-            addr.formattedAddress ||
-              [addr.street, addr.city, addr.state, addr.postalCode].filter(Boolean).join(', '),
-          );
-        }
-        setIndustries(industriesRes.data);
-      })
-      .catch(() => setError('Failed to load settings'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (org.hqAddress) {
+      const addr = org.hqAddress as any;
+      setHqAddress({
+        street: addr.street || '',
+        city: addr.city || '',
+        state: addr.state || '',
+        postalCode: addr.postalCode || '',
+        country: addr.country || '',
+        formattedAddress: addr.formattedAddress || '',
+        lat: addr.lat || 0,
+        lng: addr.lng || 0,
+      });
+      setAddressDisplay(
+        addr.formattedAddress ||
+          [addr.street, addr.city, addr.state, addr.postalCode].filter(Boolean).join(', '),
+      );
+    }
+  }, [org]);
 
   const handleSave = async () => {
     setSaving(true);
     setError('');
     setSuccess('');
-    try {
-      const res = await orgApi.updateSettings({
+    updateMutation.mutate(
+      {
         name,
         website: website || undefined,
         contactPhone: contactPhone || undefined,
@@ -174,15 +174,18 @@ export default function SettingsPage() {
               lng: hqAddress.lng,
             }
           : undefined,
-      });
-      setOrg(res.data);
-      setSuccess('Settings saved');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setSuccess('Settings saved');
+          setTimeout(() => setSuccess(''), 3000);
+        },
+        onError: (err: any) => {
+          setError(err.response?.data?.message || 'Failed to save settings');
+        },
+        onSettled: () => setSaving(false),
+      },
+    );
   };
 
   if (loading) return <PageLoader />;
@@ -250,7 +253,7 @@ export default function SettingsPage() {
                   onChange={(e) => setIndustryId(e.target.value)}
                   disabled={!canEdit}
                   placeholder="Select industry"
-                  options={industries.map((ind) => ({ value: ind.id, label: ind.name }))}
+                  options={industries.map((ind: { id: string; name: string }) => ({ value: ind.id, label: ind.name }))}
                 />
                 <CustomInput.Text
                   label="Website"

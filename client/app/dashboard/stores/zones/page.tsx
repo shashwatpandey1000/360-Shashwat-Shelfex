@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import {
@@ -14,7 +14,8 @@ import { MoreHorizontal, ArrowLeft, Map } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { zonesApi } from '@/lib/api/zones.api';
+import { useZonesQuery, useAllZonesQuery } from '@/hooks/queries/useZoneQueries';
+import { useDeleteZoneMutation } from '@/hooks/mutations/useZoneMutations';
 import AddZoneDialog from './components/AddZoneDialog';
 import EditZoneDialog from './components/EditZoneDialog';
 
@@ -30,55 +31,12 @@ interface ZoneRow {
 export default function ZonesPage() {
   const router = useRouter();
 
-  const [data, setData] = useState<ZoneRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const [allZones, setAllZones] = useState<{ id: string; name: string; parentZoneId: string | null }[]>([]);
   const [editingZone, setEditingZone] = useState<ZoneRow | null>(null);
 
-  const fetchZones = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await zonesApi.list({
-        page: currentPage,
-        perPage,
-        search: search || undefined,
-        sortBy: 'name',
-        sortOrder: 'asc',
-      });
-      setData(res.data.data);
-      setTotalCount(res.data.total);
-      setTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load zones');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, search]);
-
-  const fetchAllZones = useCallback(async () => {
-    try {
-      const res = await zonesApi.getAll();
-      setAllZones(res.data);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchZones();
-  }, [fetchZones]);
-
-  useEffect(() => {
-    fetchAllZones();
-  }, [fetchAllZones]);
-
-  const [searchInput, setSearchInput] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput);
@@ -87,20 +45,31 @@ export default function ZonesPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const handleDelete = async (zone: ZoneRow) => {
-    try {
-      await zonesApi.delete(zone.id);
-      toast.success(`${zone.name} deleted`);
-      fetchZones();
-      fetchAllZones();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete zone');
-    }
+  const { data: res, isLoading } = useZonesQuery({
+    page: currentPage,
+    perPage,
+    search: search || undefined,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  const { data: allZonesRes } = useAllZonesQuery();
+
+  const zoneList = res?.data?.data ?? [];
+  const totalCount = res?.data?.total ?? 0;
+  const totalPages = res?.data?.totalPages ?? 1;
+  const allZones = allZonesRes?.data ?? [];
+
+  const deleteMutation = useDeleteZoneMutation();
+  const handleDelete = (zone: ZoneRow) => {
+    deleteMutation.mutate(zone.id, {
+      onSuccess: () => toast.success(`${zone.name} deleted`),
+      onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to delete zone'),
+    });
   };
 
   const getParentName = (parentZoneId: string | null) => {
     if (!parentZoneId) return '—';
-    const parent = allZones.find((z) => z.id === parentZoneId);
+    const parent = allZones.find((z: { id: string; name: string; parentZoneId: string | null }) => z.id === parentZoneId);
     return parent?.name || '—';
   };
 
@@ -187,10 +156,7 @@ export default function ZonesPage() {
         </div>
         <AddZoneDialog
           allZones={allZones}
-          onCreated={() => {
-            fetchZones();
-            fetchAllZones();
-          }}
+          onCreated={() => {}}
           trigger={<CustomButton size="sm">Add Zone</CustomButton>}
         />
       </div>
@@ -259,7 +225,7 @@ export default function ZonesPage() {
         </div>
 
         <DataTable
-          data={data}
+          data={zoneList}
           config={tableConfig}
           isLoading={isLoading}
           emptyMessage={
@@ -272,11 +238,7 @@ export default function ZonesPage() {
         <EditZoneDialog
           zone={editingZone}
           allZones={allZones}
-          onUpdated={() => {
-            fetchZones();
-            fetchAllZones();
-            setEditingZone(null);
-          }}
+          onUpdated={() => setEditingZone(null)}
           onClose={() => setEditingZone(null)}
         />
       )}
