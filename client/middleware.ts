@@ -32,16 +32,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/error?reason=invalid_state', request.url));
     }
 
-    // State is valid — clear the cookie and proceed
+    // State is valid — clear all OAuth flow cookies and proceed
     const response = NextResponse.next();
     response.cookies.delete('oauth_state');
+    response.cookies.delete('oauth_nonce');
     return response;
   }
 
   const accessToken = request.cookies.get('access_token')?.value;
 
   if (!accessToken) {
-    // No access token — try refreshing with refresh_token before redirecting to SSO
     const refreshResult = await tryRefreshToken(request);
     if (refreshResult) return refreshResult;
     return await redirectToSSO(request);
@@ -50,7 +50,6 @@ export async function middleware(request: NextRequest) {
   // Check if token is expired (decode without verification — verification happens server-side)
   const decoded = decodeJwtPayload(accessToken);
   if (!decoded || typeof decoded.exp !== 'number' || decoded.exp * 1000 < Date.now()) {
-    // Token expired — try refreshing with refresh_token before redirecting to SSO
     const refreshResult = await tryRefreshToken(request);
     if (refreshResult) return refreshResult;
     return await redirectToSSO(request);
@@ -139,15 +138,17 @@ async function redirectToSSO(request: NextRequest) {
   const clientId = process.env.NEXT_PUBLIC_CLIENT_ID || 'shelf360';
   const callbackUrl = process.env.NEXT_PUBLIC_CALLBACK_URL || 'http://localhost:3001/auth/callback';
 
-  // Generate CSRF state
-  const state = crypto.randomUUID();
+  // Reuse in-flight OAuth cookies if they exist — multiple concurrent requests
+  // (prefetch, assets) can all trigger this function and overwrite the state
+  // cookie, causing a mismatch when the SSO callback arrives with the original state.
+  const existingState = request.cookies.get('oauth_state')?.value;
+  const existingVerifier = request.cookies.get('pkce_verifier')?.value;
+  const existingNonce = request.cookies.get('oauth_nonce')?.value;
 
-  // Generate PKCE code_verifier and code_challenge (S256)
-  const codeVerifier = generateCodeVerifier();
+  const state = existingState || crypto.randomUUID();
+  const codeVerifier = existingVerifier || generateCodeVerifier();
+  const nonce = existingNonce || crypto.randomUUID();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-  // Generate OpenID Connect nonce
-  const nonce = crypto.randomUUID();
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -170,8 +171,11 @@ async function redirectToSSO(request: NextRequest) {
     path: '/',
   };
 
+  // Always write cookies with the values we're actually using. This ensures
+  // pkce_verifier stays in sync with the code_challenge sent to SSO — even
+  // when oauth_state is stale but pkce_verifier was already cleared by a
+  // previous callback attempt, which would cause "code_verifier required".
   response.cookies.set('oauth_state', state, cookieOptions);
-  // PKCE verifier must be readable by callback page JS to send to server
   response.cookies.set('pkce_verifier', codeVerifier, {
     ...cookieOptions,
     httpOnly: false,

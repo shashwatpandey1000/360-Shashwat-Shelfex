@@ -10,36 +10,43 @@ function CallbackContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const code = searchParams.get('code');
+    if (!code) {
+      setError('No authorization code received');
+      return;
+    }
+
+    // React StrictMode mounts → unmounts → remounts in dev, causing this effect
+    // to fire twice with the same auth code. The auth code is one-time use, so we
+    // gate on a sessionStorage key derived from the code to ensure one API call.
+    const sessionKey = `auth_callback_${code}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, '1');
+
     const handleCallback = async () => {
       try {
-        const code = searchParams.get('code');
         const state = searchParams.get('state');
 
-        if (!code) {
-          throw new Error('No authorization code received');
-        }
-
-        // Read PKCE verifier from cookie (set by middleware) and send to server
         const pkceVerifier = document.cookie
           .split('; ')
           .find((c) => c.startsWith('pkce_verifier='))
           ?.split('=')[1];
 
-        // Clear the one-time PKCE verifier cookie
         document.cookie = 'pkce_verifier=; path=/; max-age=0';
 
         await authApi.callback(code, state, pkceVerifier);
 
-        // Full reload so AuthProvider re-fetches with the new cookies
+        sessionStorage.removeItem(sessionKey);
         window.location.href = '/dashboard';
       } catch (err: any) {
+        sessionStorage.removeItem(sessionKey);
         console.error('Callback error:', err);
         setError(err.response?.data?.message || err.message || 'Authentication failed');
       }
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   if (error) {
     return (
