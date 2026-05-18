@@ -13,7 +13,7 @@ export function useLoginCallbackMutation() {
     }: {
       code: string;
       state: string | null;
-      pkceVerifier: string | undefined;
+      pkceVerifier: string | null | undefined;
     }) => authApi.callback(code, state, pkceVerifier),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
