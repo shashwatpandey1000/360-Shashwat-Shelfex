@@ -51,9 +51,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.me();
       setUser(response.data.user);
       setAccessMap(response.data.accessMap);
-    } catch {
+    } catch (error: any) {
       setUser(null);
       setAccessMap(null);
+      // A 401 here means the stored token is invalid (wrong issuer, bad signature,
+      // etc.) — not just expired (the axios interceptor already handles that via
+      // refresh + retry). Clear the bad cookies server-side and send the user back
+      // through SSO so they get a fresh, valid token.
+      if (error?.response?.status === 401) {
+        // On /auth/* pages the user has no token yet — a 401 from /me is expected.
+        // Don't redirect; let the callback page complete the token exchange first.
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/')) {
+          return;
+        }
+        try { await authApi.logout(); } catch {}
+        window.location.replace('/');
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
