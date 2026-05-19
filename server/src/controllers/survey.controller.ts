@@ -19,6 +19,7 @@ import {
   getSurveyById,
   getMySlots,
   generateUploadUrl,
+  mockProcessAI,
 } from '../services/survey.service';
 
 // POST /surveys/start
@@ -75,7 +76,7 @@ export const submit = asyncHandler(async (req: Request, res: Response) => {
 // GET /surveys/:id/upload-url
 export const getUploadUrl = asyncHandler(async (req: Request, res: Response) => {
   const input = uploadUrlSchema.parse(req.query);
-  const result = generateUploadUrl(req.params['id'] as string, input);
+  const result = await generateUploadUrl(req.params['id'] as string, input);
   ApiResponse.success(res, result);
 });
 
@@ -98,4 +99,15 @@ export const mySlots = asyncHandler(async (req: Request, res: Response) => {
   const query = mySlotsSchema.parse(req.query);
   const result = await getMySlots(req.accessMap!.userId, req.orgId!, query);
   ApiResponse.success(res, result);
+});
+// POST /surveys/:id/mock-ai — triggers mock AI product detection for all photos in a survey
+// Used during development / demo until the real AI team's webhook is integrated.
+export const mockAiProcess = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const result = await mockProcessAI(req.orgId!, req.params['id'] as string);
+    ApiResponse.success(res, result, 'AI processing complete (mock)');
+  } catch (err: any) {
+    if (err.statusCode === 404) { ApiResponse.notFound(res, err.message); return; }
+    throw err;
+  }
 });

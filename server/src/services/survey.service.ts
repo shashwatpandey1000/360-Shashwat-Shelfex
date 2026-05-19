@@ -1,9 +1,10 @@
-import { eq, and, desc, asc, count, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, count, gte, lte, inArray, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   surveys,
   surveyScenes,
   surveyPhotos,
+  surveyAiResults,
   scheduleInstances,
   tours,
   scenes,
@@ -11,6 +12,7 @@ import {
   stores,
   users,
 } from '../db/schema';
+import { generatePresignedUploadUrl } from '../utils/s3';
 import type { AccessMap } from './accessMap.service';
 import type {
   StartSurveyInput,
@@ -317,21 +319,11 @@ export async function submitSurvey(orgId: string, surveyId: string, input: Submi
   return updated;
 }
 
-// ─── Generate mock presigned upload URL ───────────────────────────────────────
+// ─── Generate real S3 presigned upload URL ────────────────────────────────────
 
-export function generateUploadUrl(surveyId: string, input: UploadUrlInput) {
-  // TODO: replace with real AWS S3 presigned URL when bucket is configured
-  const mockKey = `surveys/${surveyId}/${input.uploadType}/${Date.now()}-${input.filename}`;
-  const mockBucket = process.env.S3_BUCKET ?? 'shelfex-surveys-mock';
-  const mockRegion = process.env.AWS_REGION ?? 'ap-southeast-1';
-
-  return {
-    uploadUrl: `https://${mockBucket}.s3.${mockRegion}.amazonaws.com/${mockKey}?mock=true&expires=3600`,
-    fileUrl: `https://${mockBucket}.s3.${mockRegion}.amazonaws.com/${mockKey}`,
-    key: mockKey,
-    expiresIn: 3600,
-    isMock: !process.env.S3_BUCKET,
-  };
+export async function generateUploadUrl(surveyId: string, input: UploadUrlInput) {
+  const key = `surveys/${surveyId}/${input.uploadType}/${Date.now()}-${input.filename}`;
+  return generatePresignedUploadUrl(key, input.contentType);
 }
 
 // ─── List surveys ─────────────────────────────────────────────────────────────
@@ -484,4 +476,105 @@ export async function getMySlots(surveyorId: string, orgId: string, query: MySlo
   ]);
 
   return { data, total: Number(total), page, perPage, totalPages: Math.ceil(Number(total) / perPage) };
+}
+// ─── Mock AI processing ───────────────────────────────────────────────────────
+// Simulates the external AI product-recognition service calling back with results.
+// In production this would be replaced by the real AI team's webhook hitting our endpoint.
+
+const MOCK_BRANDS = ['Haldiram', 'PepsiCo', 'Coca-Cola', 'Nestlé', 'ITC', 'Britannia', 'Parle'];
+const MOCK_PRODUCTS: Record<string, string[]> = {
+  Haldiram: ["Aloo Bhujia", "Mixture", "Sev", "Methi Sev", "Moong Dal"],
+  PepsiCo: ["Lay's Classic", "Kurkure Masala", "Doritos Nacho", "Uncle Chipps"],
+  'Coca-Cola': ["Coke 500ml", "Sprite 750ml", "Limca 250ml", "Thums Up 1L"],
+  Nestlé: ["KitKat 4F", "Munch", "Milkmaid 400g", "Maggi 2-Min"],
+  ITC: ["Bingo Mad Angles", "Bingo Original Style", "Sunfeast Dark Fantasy"],
+  Britannia: ["Good Day Cashew", "NutriChoice", "50-50 Maska Chaska"],
+  Parle: ["Parle-G Original", "Krackjack", "Hide & Seek Choco"],
+};
+
+function randomBetween(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateMockProducts(count: number) {
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const brand = MOCK_BRANDS[Math.floor(Math.random() * MOCK_BRANDS.length)];
+    const productList = MOCK_PRODUCTS[brand];
+    const name = productList[Math.floor(Math.random() * productList.length)];
+    results.push({
+      name,
+      brand,
+      sku: `SKU-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      confidence: parseFloat((0.7 + Math.random() * 0.29).toFixed(3)),
+      position: {
+        shelf_row: randomBetween(1, 5),
+        shelf_col: randomBetween(1, 8),
+        bbox: { x: randomBetween(10, 400), y: randomBetween(10, 300), width: randomBetween(40, 120), height: randomBetween(40, 120) },
+      },
+    });
+  }
+  return results;
+}
+
+export async function mockProcessAI(orgId: string, surveyId: string) {
+  // Verify survey belongs to org
+  const [survey] = await db
+    .select({ id: surveys.id, storeId: surveys.storeId })
+    .from(surveys)
+    .where(and(eq(surveys.orgId, orgId), eq(surveys.id, surveyId)))
+    .limit(1);
+
+  if (!survey) throw Object.assign(new Error('Survey not found'), { statusCode: 404 });
+
+  // Load all photos
+  const photos = await db
+    .select({ id: surveyPhotos.id, photoType: surveyPhotos.photoType })
+    .from(surveyPhotos)
+    .where(eq(surveyPhotos.surveyId, surveyId));
+
+  if (photos.length === 0) {
+    return { processed: 0, message: 'No photos to process' };
+  }
+
+  const now = new Date();
+  const processingTimeMs = randomBetween(800, 3200);
+
+  const resultRows = photos.map((photo) => {
+    const productCount = photo.photoType === 'panorama_crop' ? 0 : randomBetween(3, 12);
+    return {
+      surveyPhotoId: photo.id,
+      surveyId,
+      storeId: survey.storeId,
+      status: 'completed' as const,
+      products: generateMockProducts(productCount),
+      productCount,
+      processingTimeMs,
+      processedAt: now,
+    };
+  });
+
+  // Upsert: conflict on surveyPhotoId → update existing result
+  await db
+    .insert(surveyAiResults)
+    .values(resultRows)
+    .onConflictDoUpdate({
+      target: surveyAiResults.surveyPhotoId,
+      set: {
+        status: sql`excluded.status`,
+        products: sql`excluded.products`,
+        productCount: sql`excluded.product_count`,
+        processingTimeMs: sql`excluded.processing_time_ms`,
+        processedAt: sql`excluded.processed_at`,
+        updatedAt: now,
+      },
+    });
+
+  // Mark all photos as AI-processed
+  await db
+    .update(surveyPhotos)
+    .set({ aiStatus: 'completed', updatedAt: now })
+    .where(eq(surveyPhotos.surveyId, surveyId));
+
+  return { processed: photos.length, surveyId };
 }

@@ -4,6 +4,9 @@ import validateEnv from './utils/validateEnv';
 import logger from './utils/logger';
 import cron from 'node-cron';
 import { materializeAllOrgs, getMaterializationWindow } from './services/schedule.materializer';
+import { markMissedSurveys } from './jobs/markMissedSurveys';
+import { sendSurveyReminders } from './jobs/sendSurveyReminders';
+import { retryPendingApprovalEmails } from './jobs/retryPendingApprovalEmails';
 
 validateEnv();
 
@@ -26,6 +29,50 @@ cron.schedule(
       logger.info('[Cron] Slot materialisation complete');
     } catch (err) {
       logger.error(`[Cron] Slot materialisation failed: ${err}`);
+    }
+  },
+  { timezone: 'UTC' },
+);
+
+// ─── Mark missed surveys (every 5 min) ───────────────────────────────────────
+// Slots whose windowEndUtc < now AND status = pending|in_progress → missed.
+// Notifies store manager via email.
+cron.schedule(
+  '*/5 * * * *',
+  async () => {
+    try {
+      await markMissedSurveys();
+    } catch (err) {
+      logger.error(`[Cron] markMissedSurveys failed: ${err}`);
+    }
+  },
+  { timezone: 'UTC' },
+);
+
+// ─── Send survey reminders (every 5 min) ─────────────────────────────────────
+// Emails assigned surveyors 60 min and 10 min before their survey window opens.
+cron.schedule(
+  '*/5 * * * *',
+  async () => {
+    try {
+      await sendSurveyReminders();
+    } catch (err) {
+      logger.error(`[Cron] sendSurveyReminders failed: ${err}`);
+    }
+  },
+  { timezone: 'UTC' },
+);
+
+// ─── Retry pending approval emails (every 30 min) ────────────────────────────
+// Re-sends org approval notification emails to super admins for orgs that
+// haven't been notified yet (e.g. due to email delivery failures).
+cron.schedule(
+  '*/30 * * * *',
+  async () => {
+    try {
+      await retryPendingApprovalEmails();
+    } catch (err) {
+      logger.error(`[Cron] retryPendingApprovalEmails failed: ${err}`);
     }
   },
   { timezone: 'UTC' },

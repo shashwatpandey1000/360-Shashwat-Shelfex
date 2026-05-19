@@ -1,5 +1,3 @@
-import 'dotenv/config';
-import validateEnv from '../utils/validateEnv';
 import logger from '../utils/logger';
 import {
   listActiveSuperAdmins,
@@ -10,9 +8,7 @@ import { sendOrgPendingApprovalEmail } from '../services/email.service';
 
 const DEFAULT_BATCH_SIZE = 100;
 
-async function run() {
-  validateEnv();
-
+export async function retryPendingApprovalEmails(): Promise<void> {
   const batchSize = Number(
     process.env.APPROVAL_NOTIFICATION_RETRY_BATCH_SIZE || DEFAULT_BATCH_SIZE,
   );
@@ -80,8 +76,3 @@ async function run() {
     `Retry job complete: processed=${processed}, sent=${sent}, failed=${failed}, skipped=${skipped}`,
   );
 }
-
-run().catch((err) => {
-  logger.error(`Retry job crashed: ${(err as Error).message}`);
-  process.exit(1);
-});

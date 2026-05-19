@@ -7,8 +7,9 @@ import {
   roleTemplates,
   roleTemplatePermissions,
   stores,
+  organizations,
 } from '../db/schema';
-import { sendEmployeeInviteEmail } from './email.service';
+import { sendEmployeeInviteEmail, sendStoreManagerAssignedEmail } from './email.service';
 import type { AccessMap } from './accessMap.service';
 import type {
   CreateEmployeeInput,
@@ -464,6 +465,30 @@ export async function assignStoreManager(orgId: string, storeId: string, employe
     .set({ managerId: employeeId, updatedAt: new Date() })
     .where(eq(stores.id, storeId))
     .returning();
+
+  // Send notification email to new manager (non-blocking)
+  if (updated) {
+    const [org] = await db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1);
+    const [emp] = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, employeeId))
+      .limit(1);
+    if (emp?.email) {
+      const dashboardUrl = process.env.CLIENT_URL ?? 'http://localhost:3001';
+      sendStoreManagerAssignedEmail(
+        emp.email,
+        emp.name ?? emp.email,
+        updated.name,
+        org?.name ?? 'your organization',
+        `${dashboardUrl}/dashboard/stores/${storeId}`,
+      );
+    }
+  }
 
   return updated || null;
 }

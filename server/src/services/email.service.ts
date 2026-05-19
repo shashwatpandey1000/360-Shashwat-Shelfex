@@ -139,3 +139,97 @@ export function sendOrgPendingApprovalEmail(
   `;
   return sendEmailTracked(to, subject, html);
 }
+// Store manager assigned email — sent to the new manager when they're assigned to a store
+export function sendStoreManagerAssignedEmail(
+  to: string,
+  managerName: string,
+  storeName: string,
+  orgName: string,
+  dashboardUrl: string,
+) {
+  const subject = `You've been assigned as Store Manager for ${storeName}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #131313;">Store Manager Assignment</h2>
+      <p>Hi ${managerName},</p>
+      <p>You've been assigned as the <strong>Store Manager</strong> for <strong>${storeName}</strong> at <strong>${orgName}</strong>.</p>
+      <p>You can now manage surveys, schedules, and surveyors for this store:</p>
+      <a href="${dashboardUrl}" style="display: inline-block; background: #131313; color: white; padding: 10px 24px; text-decoration: none; margin: 16px 0;">
+        Go to Dashboard
+      </a>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="color: #999; font-size: 12px;">Shelf360 by ShelfExecution</p>
+    </div>
+  `;
+  sendEmail(to, subject, html);
+}
+
+// Surveyor reminder email — sent 1 hour and 10 minutes before a survey window opens
+export function sendSurveyorReminderEmail(
+  to: string,
+  surveyorName: string,
+  storeName: string,
+  windowStartLocal: string,
+  minutesBefore: number,
+) {
+  const timeLabel = minutesBefore === 60 ? '1 hour' : `${minutesBefore} minutes`;
+  const subject = `Reminder: Survey at ${storeName} starts in ${timeLabel}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #131313;">Survey Reminder</h2>
+      <p>Hi ${surveyorName},</p>
+      <p>Your survey at <strong>${storeName}</strong> starts in <strong>${timeLabel}</strong>.</p>
+      <table style="border-collapse: collapse; width: 100%; margin: 12px 0;">
+        <tr>
+          <td style="padding: 6px 0; color: #666; width: 120px;">Store</td>
+          <td style="padding: 6px 0;"><strong>${storeName}</strong></td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #666;">Window opens</td>
+          <td style="padding: 6px 0;">${windowStartLocal}</td>
+        </tr>
+      </table>
+      <p style="color: #555; font-size: 13px;">Open the Shelf360 app to start your survey once the window opens.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="color: #999; font-size: 12px;">Shelf360 by ShelfExecution</p>
+    </div>
+  `;
+  sendEmail(to, subject, html);
+}
+
+// Survey missed email — sent to the store manager when a survey slot is not completed in time
+export function sendSurveyMissedEmail(
+  to: string,
+  managerName: string,
+  storeName: string,
+  windowStartLocal: string,
+  windowEndLocal: string,
+  surveyorName: string | null,
+  dashboardUrl: string,
+) {
+  const subject = `Missed survey alert: ${storeName}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #c0392b;">Missed Survey Alert</h2>
+      <p>Hi ${managerName},</p>
+      <p>A scheduled survey at <strong>${storeName}</strong> was not completed within the time window.</p>
+      <table style="border-collapse: collapse; width: 100%; margin: 12px 0;">
+        <tr>
+          <td style="padding: 6px 0; color: #666; width: 130px;">Store</td>
+          <td style="padding: 6px 0;"><strong>${storeName}</strong></td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #666;">Window</td>
+          <td style="padding: 6px 0;">${windowStartLocal} – ${windowEndLocal}</td>
+        </tr>
+        ${surveyorName ? `<tr><td style="padding: 6px 0; color: #666;">Assigned to</td><td style="padding: 6px 0;">${surveyorName}</td></tr>` : ''}
+      </table>
+      <a href="${dashboardUrl}" style="display: inline-block; background: #131313; color: white; padding: 10px 24px; text-decoration: none; margin: 16px 0;">
+        View Schedule
+      </a>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="color: #999; font-size: 12px;">Shelf360 by ShelfExecution</p>
+    </div>
+  `;
+  sendEmail(to, subject, html);
+}

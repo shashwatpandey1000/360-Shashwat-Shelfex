@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { tenantContext } from '../middlewares/tenant.middleware';
 import { requirePermission } from '../middlewares/permission.middleware';
-import { start, addScene, addPhoto, submit, getUploadUrl, list, detail, mySlots } from '../controllers/survey.controller';
+import { start, addScene, addPhoto, submit, getUploadUrl, list, detail, mySlots, mockAiProcess } from '../controllers/survey.controller';
 
 const router = Router();
 
@@ -19,6 +19,9 @@ router.post('/:id/submit', requirePermission('surveys:execute'), submit);
 
 // Upload URL (presigned S3)
 router.get('/:id/upload-url', requirePermission('surveys:execute'), getUploadUrl);
+
+// Mock AI processing (development/demo only — simulates the AI team's webhook)
+router.post('/:id/mock-ai', requirePermission('surveys:write'), mockAiProcess);
 
 // Dashboard queries
 router.get('/', requirePermission('surveys:read'), list);

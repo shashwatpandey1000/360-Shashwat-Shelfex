@@ -7,6 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "job:retry-approval-emails": "node dist/jobs/retryPendingApprovalEmails.js",
+    "job:mark-missed-surveys": "node dist/jobs/markMissedSurveys.js",
+    "job:send-survey-reminders": "node dist/jobs/sendSurveyReminders.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -20,6 +22,8 @@
   "license": "ISC",
   "description": "Shelf360 Platform API Server",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
+    "@aws-sdk/s3-request-presigner": "^3.1045.0",
     "@neondatabase/serverless": "^1.0.2",
     "axios": "^1.13.2",
     "compression": "^1.8.1",
