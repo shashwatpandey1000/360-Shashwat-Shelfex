@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-west-2
