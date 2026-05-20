@@ -3,7 +3,6 @@ import { Client, Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -46,9 +45,12 @@ async function setup() {
     fs.writeFileSync(dumpPath, Buffer.concat(chunks));
     console.log(`Dump downloaded to ${dumpPath}`);
 
-    // Restore using psql
-    const psqlUrl = RDS_URL.includes('sslmode') ? RDS_URL : `${RDS_URL}?sslmode=require`;
-    execSync(`psql "${psqlUrl}" -f ${dumpPath}`, { stdio: 'inherit' });
+    // Restore using pg client directly (no psql needed)
+    const restoreClient = new Client({ connectionString: RDS_URL, ssl: SSL });
+    await restoreClient.connect();
+    const sql = fs.readFileSync(dumpPath, 'utf8');
+    await restoreClient.query(sql);
+    await restoreClient.end();
     console.log('Data restored from dump.');
     fs.unlinkSync(dumpPath);
     return;
