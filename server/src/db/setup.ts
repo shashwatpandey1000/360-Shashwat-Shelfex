@@ -54,7 +54,7 @@ async function setup() {
     const statements = sql
       .split(/;\s*\n/)
       .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.replace(/--[^\n]*/g, '').trim().startsWith(''));
+      .filter(s => s.length > 0 && s.replace(/--[^\n]*/g, '').trim().length > 0);
 
     let ok = 0, skipped = 0;
     for (const stmt of statements) {
