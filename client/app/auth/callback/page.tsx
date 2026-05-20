@@ -2,12 +2,13 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { useLoginCallbackMutation } from '@/hooks/mutations/useAuthMutations';
 
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const { mutateAsync: loginCallback } = useLoginCallbackMutation();
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -34,7 +35,7 @@ function CallbackContent() {
 
         document.cookie = 'pkce_verifier=; path=/; max-age=0';
 
-        await authApi.callback(code, state, pkceVerifier);
+        await loginCallback({ code, state, pkceVerifier });
 
         sessionStorage.removeItem(sessionKey);
         window.location.href = '/dashboard';
@@ -46,7 +47,7 @@ function CallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams]);
+  }, [searchParams, loginCallback]);
 
   if (error) {
     return (

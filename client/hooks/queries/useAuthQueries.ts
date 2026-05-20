@@ -10,6 +10,7 @@ export function useCurrentUserQuery() {
       if (error?.response?.status === 401) return false;
       return failureCount < 2;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes — avoids re-fetching on every mount
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: 'always', // always re-check on tab focus to pick up admin permission changes
   });
 }

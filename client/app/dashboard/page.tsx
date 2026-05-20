@@ -1,7 +1,7 @@
 'use client';
 
 import ComingSoon from '@/components/common/ComingSoon';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/useAuth';
 import { storesApi } from '@/lib/api/stores.api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

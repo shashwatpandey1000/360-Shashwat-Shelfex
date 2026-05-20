@@ -11,7 +11,7 @@ import {
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
 } from '@/hooks/mutations/useEmployeeMutations';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { CustomButton } from '@/components/common/button';
 import StatusBadge from '@/components/common/StatusBadge';

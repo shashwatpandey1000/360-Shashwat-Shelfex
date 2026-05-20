@@ -6,7 +6,7 @@ import { PlusCircle, Globe, RefreshCw, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CustomButton } from '@/components/common/button';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/useAuth';
 import { scheduleApi } from '@/lib/api/schedule.api';
 import type { TemplateWithRules } from '@/lib/api/schedule.api';
 import TemplateCard from '@/components/schedule/TemplateCard';

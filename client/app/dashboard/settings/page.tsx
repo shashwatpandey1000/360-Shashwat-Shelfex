@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/useAuth';
 import { useOrgSettingsQuery } from '@/hooks/queries/useOrgQueries';
 import { useUpdateOrgSettingsMutation } from '@/hooks/mutations/useOrgMutations';
 import { useIndustriesQuery } from '@/hooks/queries/useLookupQueries';

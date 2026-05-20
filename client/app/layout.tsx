@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/common/theme-provider';
 import { Toaster } from 'sonner';
 import TanstackProvider from '@/providers/TanstackProvider';
@@ -36,9 +35,7 @@ export default function RootLayout({
           storageKey="shelf360-theme"
           disableTransitionOnChange
         >
-          <TanstackProvider>
-            <AuthProvider>{children}</AuthProvider>
-          </TanstackProvider>
+          <TanstackProvider>{children}</TanstackProvider>
           <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </body>

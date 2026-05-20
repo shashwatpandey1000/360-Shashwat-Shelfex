@@ -25,7 +25,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserAvatar } from '@/components/common/user-avatar';
 import { ThemeToggle } from '@/components/common/theme-toggle';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/useAuth';
 
 // All possible sidebar items — filtered by access map at render time
 const ALL_SIDEBAR_ITEMS = [
