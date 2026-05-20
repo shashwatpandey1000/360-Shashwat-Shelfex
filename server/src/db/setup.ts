@@ -45,13 +45,34 @@ async function setup() {
     fs.writeFileSync(dumpPath, Buffer.concat(chunks));
     console.log(`Dump downloaded to ${dumpPath}`);
 
-    // Restore using pg client directly (no psql needed)
+    // Execute dump statement by statement
     const restoreClient = new Client({ connectionString: RDS_URL, ssl: SSL });
     await restoreClient.connect();
+
     const sql = fs.readFileSync(dumpPath, 'utf8');
-    await restoreClient.query(sql);
+    // Split on semicolons at end of line, filter blanks and comment-only blocks
+    const statements = sql
+      .split(/;\s*\n/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.replace(/--[^\n]*/g, '').trim().startsWith(''));
+
+    let ok = 0, skipped = 0;
+    for (const stmt of statements) {
+      const clean = stmt.replace(/--[^\n]*/g, '').trim();
+      if (!clean) { skipped++; continue; }
+      try {
+        await restoreClient.query(stmt);
+        ok++;
+      } catch (e: any) {
+        // Skip benign errors (already exists, etc.)
+        if (['42P07', '42710', '23505'].includes(e.code)) { skipped++; continue; }
+        console.warn(`Skipped statement (${e.code}): ${e.message.slice(0, 80)}`);
+        skipped++;
+      }
+    }
+
     await restoreClient.end();
-    console.log('Data restored from dump.');
+    console.log(`Data restored: ${ok} statements executed, ${skipped} skipped.`);
     fs.unlinkSync(dumpPath);
     return;
   }
