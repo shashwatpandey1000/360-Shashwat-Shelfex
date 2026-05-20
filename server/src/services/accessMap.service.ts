@@ -18,6 +18,7 @@ export interface AccessMap {
   };
   permissions: Permission[];
   modules: string[];
+  permissionsVersion: number;
 }
 
 // Build access map for a user from DB
@@ -29,6 +30,7 @@ export async function buildAccessMap(userId: string): Promise<AccessMap | null> 
       orgId: users.orgId,
       roleTemplate: users.roleTemplate,
       scopeType: users.scopeType,
+      permissionsVersion: users.permissionsVersion,
       orgStatus: organizations.status,
       orgRejectedAt: organizations.rejectedAt,
       orgRejectionReason: organizations.rejectionReason,
@@ -79,6 +81,7 @@ export async function buildAccessMap(userId: string): Promise<AccessMap | null> 
     dataScope,
     permissions,
     modules,
+    permissionsVersion: user.permissionsVersion,
   };
 }
 

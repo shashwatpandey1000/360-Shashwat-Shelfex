@@ -1,4 +1,4 @@
-import { eq, and, or, ilike, desc, asc, count, isNull, inArray } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, asc, count, isNull, inArray, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   users,
@@ -352,6 +352,7 @@ export async function updateEmployee(
         })),
       );
     }
+    updateData.permissionsVersion = sql`${users.permissionsVersion} + 1`;
   } else if (input.roleTemplate && input.roleTemplate !== existing.roleTemplate) {
     // If role template changed → rewrite permissions from template
     updateData.roleTemplate = input.roleTemplate;
@@ -380,6 +381,7 @@ export async function updateEmployee(
         );
       }
     }
+    updateData.permissionsVersion = sql`${users.permissionsVersion} + 1`;
   }
 
   // If scope changed → rewrite scopes

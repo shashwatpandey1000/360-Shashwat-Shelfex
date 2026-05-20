@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 
 // Users
@@ -19,6 +19,7 @@ export const users = pgTable(
     status: text('status').notNull().default('active'), // 'active' | 'inactive' | 'pending_first_login'
     languagePreference: text('language_preference'),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+    permissionsVersion: integer('permissions_version').notNull().default(1),
     createdBy: uuid('created_by'), // self-referential FK to users
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
