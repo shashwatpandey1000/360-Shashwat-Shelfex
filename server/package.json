@@ -12,6 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:setup": "node dist/db/setup.js",
     "db:studio": "drizzle-kit studio",
     "db:seed": "ts-node-dev --transpile-only src/db/seed.ts",
     "format": "prettier --write .",
@@ -25,6 +26,7 @@
     "@aws-sdk/client-s3": "^3.1045.0",
     "@aws-sdk/s3-request-presigner": "^3.1045.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@types/pg": "^8.20.0",
     "axios": "^1.13.2",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -42,6 +44,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
+    "pg": "^8.21.0",
     "resend": "^6.10.0",
     "winston": "^3.18.3",
     "zod": "^4.3.6"
