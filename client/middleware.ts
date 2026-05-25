@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Route → minimum read permission required to access it.
+// Set by the server on every /auth/me response so middleware always has fresh data.
+// If the cookie is absent (first load after login), middleware allows through and
+// the client-side useAuth() handles the guard on hydration.
+const ROUTE_PERMISSIONS: Record<string, string> = {
+  '/dashboard/employees': 'employees:read',
+  '/dashboard/stores': 'stores:read',
+  '/dashboard/surveys': 'surveys:read',
+  '/dashboard/schedule': 'schedule:read',
+  '/dashboard/settings': 'settings:read',
+};
+
 // Decode JWT payload without verification (Edge Runtime compatible)
 // Verification happens server-side in the 360 API auth middleware
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -29,6 +41,17 @@ export async function middleware(request: NextRequest) {
     const storedState = request.cookies.get('oauth_state')?.value;
 
     if (!state || !storedState || state !== storedState) {
+      // If there's also no access token, this is the SSO re-completing a stale
+      // authorization after logout+re-login (the oauth_state cookie was already
+      // deleted when we processed the original callback). Restart a fresh OAuth
+      // flow — the SSO still has a session and will auto-authorize cleanly.
+      const hasToken = !!request.cookies.get('access_token')?.value;
+      if (!hasToken) {
+        const restart = NextResponse.redirect(new URL('/', request.url));
+        restart.cookies.delete('oauth_state');
+        restart.cookies.delete('oauth_nonce');
+        return restart;
+      }
       return NextResponse.redirect(new URL('/auth/error?reason=invalid_state', request.url));
     }
 
@@ -53,6 +76,22 @@ export async function middleware(request: NextRequest) {
     const refreshResult = await tryRefreshToken(request);
     if (refreshResult) return refreshResult;
     return await redirectToSSO(request);
+  }
+
+  // Route-level permission check using the cookie set by /auth/me.
+  // If the cookie is absent, allow through — client-side useAuth() handles the first load.
+  const permsCookie = request.cookies.get('user_permissions')?.value;
+  if (permsCookie) {
+    try {
+      const permissions: string[] = JSON.parse(permsCookie);
+      for (const [route, required] of Object.entries(ROUTE_PERMISSIONS)) {
+        if (pathname.startsWith(route) && !permissions.includes(required)) {
+          return NextResponse.redirect(new URL('/auth/error?reason=forbidden', request.url));
+        }
+      }
+    } catch {
+      // Malformed cookie — ignore and let the request through
+    }
   }
 
   return NextResponse.next();
@@ -158,6 +197,8 @@ async function redirectToSSO(request: NextRequest) {
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
     nonce,
+    // prompt=login forces the SSO to show the login form even when there is an
+    // active SSO browser session — prevents auto-re-authorization after logout.
   });
 
   const authorizeUrl = `${ssoUrl}/oauth/authorize?${params.toString()}`;

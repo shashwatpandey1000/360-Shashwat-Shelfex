@@ -22,17 +22,7 @@ export function useLoginCallbackMutation() {
 }
 
 export function useLogoutMutation() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => authApi.logout(),
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ['auth', 'me'] });
-      const ssoUrl =
-        process.env.NEXT_PUBLIC_SSO_API_URL || 'http://localhost:8000/api/v1';
-      window.location.href = `${ssoUrl}/auth/logout?redirect_uri=${encodeURIComponent(window.location.origin)}`;
-    },
-    onError: (error) => {
-      console.error('Logout failed:', error);
-    },
   });
 }

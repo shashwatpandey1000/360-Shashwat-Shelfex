@@ -27,6 +27,14 @@ const COOKIE_OPTIONS_REFRESH = {
   path: '/',
 };
 
+const COOKIE_OPTIONS_PERMISSIONS = {
+  httpOnly: true, // Edge middleware can read httpOnly; browser JS cannot (XSS protection)
+  secure: isProduction,
+  sameSite: 'lax' as const,
+  maxAge: 60 * 60 * 1000, // matches access token lifetime
+  path: '/',
+};
+
 // POST /auth/callback - Exchange authorization code for tokens
 export const callback = asyncHandler(async (req: Request, res: Response) => {
   const { code, code_verifier } = req.body; // validated by Zod middleware
@@ -64,6 +72,15 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     ApiResponse.unauthorized(res);
     return;
+  }
+
+  // Keep permissions cookie in sync so Edge middleware can do route-level guards
+  if (req.accessMap) {
+    res.cookie(
+      'user_permissions',
+      JSON.stringify(req.accessMap.permissions),
+      COOKIE_OPTIONS_PERMISSIONS,
+    );
   }
 
   // Return SSO identity + 360 access map (if user exists in 360)
@@ -133,6 +150,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
   res.clearCookie('access_token', { path: '/' });
   res.clearCookie('refresh_token', { path: '/' });
+  res.clearCookie('user_permissions', { path: '/' });
 
   logger.info('User logged out');
 
