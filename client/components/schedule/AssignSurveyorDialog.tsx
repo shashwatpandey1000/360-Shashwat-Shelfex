@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { employeesApi } from '@/lib/api/employees.api';
-import apiClient from '@/lib/api/client';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
+import { useAssignSurveyorMutation } from '@/hooks/mutations/useScheduleMutations';
 import type { ScheduleSlot } from '@/lib/api/schedule.api';
 
 interface Surveyor {
@@ -41,33 +41,24 @@ export default function AssignSurveyorDialog({
   slot,
   onAssigned,
 }: AssignSurveyorDialogProps) {
-  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState(false);
+
+  const surveyorsQuery = useEmployeesQuery({ roleTemplate: 'surveyor', status: 'active', perPage: 200 });
+  const surveyors: Surveyor[] = surveyorsQuery.data?.data?.data ?? [];
+  const assignSurveyor = useAssignSurveyorMutation();
 
   useEffect(() => {
     if (!open) return;
     setSelectedId(slot.assignedSurveyorId ?? '');
     setConflict(false);
-    setLoading(true);
-    employeesApi
-      .list({ roleTemplate: 'surveyor', status: 'active', perPage: 200 })
-      .then((res) => setSurveyors(res.data?.data ?? []))
-      .catch(() => toast.error('Failed to load surveyors'))
-      .finally(() => setLoading(false));
   }, [open, slot]);
 
   const handleAssign = async (force = false) => {
     if (!selectedId) return toast.error('Select a surveyor');
-    setSaving(true);
     setConflict(false);
     try {
-      await apiClient.patch(`/schedules/slots/${slot.id}/assign`, {
-        surveyorId: selectedId,
-        force,
-      });
+      await assignSurveyor.mutateAsync({ slotId: slot.id, surveyorId: selectedId, force });
       toast.success('Surveyor assigned');
       onAssigned();
     } catch (err: unknown) {
@@ -77,8 +68,6 @@ export default function AssignSurveyorDialog({
         return;
       }
       toast.error(axiosErr.response?.data?.message ?? 'Assignment failed');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -131,7 +120,7 @@ export default function AssignSurveyorDialog({
           {/* Surveyor select */}
           <div className="space-y-2">
             <label className="text-brand text-[14px] font-medium">Surveyor</label>
-            {loading ? (
+            {surveyorsQuery.isLoading ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">Loading surveyors…</p>
             ) : (
               <Select
@@ -167,7 +156,7 @@ export default function AssignSurveyorDialog({
             variant="ghost"
             className="rounded-lg border px-4 text-[13px] hover:border-black hover:bg-gray-200 dark:hover:border-white dark:hover:bg-neutral-800"
             onClick={() => onOpenChange(false)}
-            disabled={saving}
+            disabled={assignSurveyor.isPending}
           >
             Cancel
           </Button>
@@ -175,18 +164,18 @@ export default function AssignSurveyorDialog({
             <Button
               variant="default"
               onClick={() => handleAssign(true)}
-              disabled={saving}
+              disabled={assignSurveyor.isPending}
               className="rounded-lg bg-yellow-600 px-4 text-[13px] text-white hover:bg-yellow-700"
             >
-              {saving ? 'Assigning…' : 'Assign Anyway'}
+              {assignSurveyor.isPending ? 'Assigning…' : 'Assign Anyway'}
             </Button>
           ) : (
             <Button
               className="rounded-lg px-4 text-[13px]"
               onClick={() => handleAssign(false)}
-              disabled={saving || !selectedId}
+              disabled={assignSurveyor.isPending || !selectedId}
             >
-              {saving ? 'Assigning…' : 'Assign'}
+              {assignSurveyor.isPending ? 'Assigning…' : 'Assign'}
             </Button>
           )}
         </DialogFooter>

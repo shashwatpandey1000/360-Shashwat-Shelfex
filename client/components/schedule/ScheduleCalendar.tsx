@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import type { EventInput, DatesSetArg, EventClickArg } from '@fullcalendar/core';
-import { scheduleApi } from '@/lib/api/schedule.api';
 import type { ScheduleSlot } from '@/lib/api/schedule.api';
+import { useScheduleSlotsQuery } from '@/hooks/queries/useScheduleQueries';
 import DayDetailDialog from './DayDetailDialog';
 import AssignSurveyorDialog from './AssignSurveyorDialog';
 
@@ -28,43 +28,20 @@ interface ScheduleCalendarProps {
 }
 
 export default function ScheduleCalendar({ storeId, canWrite }: ScheduleCalendarProps) {
-  const [slots, setSlots] = useState<ScheduleSlot[]>([]);
-  const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null);
 
   const [dayDialogOpen, setDayDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedDaySlots, setSelectedDaySlots] = useState<ScheduleSlot[]>([]);
 
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignSlot, setAssignSlot] = useState<ScheduleSlot | null>(null);
 
-  // Fetch slots when date range changes
-  const fetchSlots = useCallback(
-    async (from: string, to: string) => {
-      setLoading(true);
-      try {
-        const res = await scheduleApi.listSlots({
-          dateFrom: from,
-          dateTo: to,
-          storeId,
-          perPage: 500,
-        });
-        setSlots(res.data.data);
-      } catch {
-        // silently fail — calendar just stays empty
-      } finally {
-        setLoading(false);
-      }
-    },
-    [storeId],
+  const slotsQuery = useScheduleSlotsQuery(
+    dateRange ? { dateFrom: dateRange.from, dateTo: dateRange.to, storeId, perPage: 500 } : undefined,
+    { enabled: !!dateRange },
   );
-
-  useEffect(() => {
-    if (dateRange) {
-      fetchSlots(dateRange.from, dateRange.to);
-    }
-  }, [dateRange, fetchSlots]);
+  const slots: ScheduleSlot[] = slotsQuery.data?.data?.data ?? [];
+  const loading = slotsQuery.isLoading || slotsQuery.isFetching;
 
   const handleDatesSet = useCallback((arg: DatesSetArg) => {
     const from = arg.startStr.substring(0, 10);
@@ -108,24 +85,23 @@ export default function ScheduleCalendar({ storeId, canWrite }: ScheduleCalendar
     return result;
   }, [slotsByDate]);
 
-  const handleDateClick = useCallback(
-    (info: { dateStr: string }) => {
-      const date = info.dateStr;
-      setSelectedDate(date);
-      setSelectedDaySlots(slotsByDate[date] ?? []);
-      setDayDialogOpen(true);
-    },
-    [slotsByDate],
+  const selectedDaySlots = useMemo(
+    () => (selectedDate ? slotsByDate[selectedDate] ?? [] : []),
+    [selectedDate, slotsByDate],
   );
+
+  const handleDateClick = useCallback((info: { dateStr: string }) => {
+    setSelectedDate(info.dateStr);
+    setDayDialogOpen(true);
+  }, []);
 
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       const date = info.event.extendedProps['date'] as string;
       setSelectedDate(date);
-      setSelectedDaySlots(slotsByDate[date] ?? []);
       setDayDialogOpen(true);
     },
-    [slotsByDate],
+    [],
   );
 
   const handleAssign = useCallback((slot: ScheduleSlot) => {
@@ -134,8 +110,8 @@ export default function ScheduleCalendar({ storeId, canWrite }: ScheduleCalendar
   }, []);
 
   const handleRefresh = useCallback(() => {
-    if (dateRange) fetchSlots(dateRange.from, dateRange.to);
-  }, [dateRange, fetchSlots]);
+    slotsQuery.refetch();
+  }, [slotsQuery]);
 
   return (
     <>
@@ -175,13 +151,7 @@ export default function ScheduleCalendar({ storeId, canWrite }: ScheduleCalendar
           setDayDialogOpen(false);
           handleAssign(slot);
         }}
-        onRefresh={() => {
-          handleRefresh();
-          // refresh the day's slots from updated data
-          if (selectedDate) {
-            setSelectedDaySlots(slotsByDate[selectedDate] ?? []);
-          }
-        }}
+        onRefresh={handleRefresh}
       />
 
       {assignSlot && (

@@ -21,8 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useQueryClient } from '@tanstack/react-query';
-import { scheduleApi } from '@/lib/api/schedule.api';
+import {
+  useCreateTemplateMutation,
+  useUpdateTemplateMutation,
+  useCreateRuleMutation,
+  useUpdateRuleMutation,
+  useDeleteRuleMutation,
+  useCreateWindowMutation,
+  useUpdateWindowMutation,
+  useDeleteWindowMutation,
+} from '@/hooks/mutations/useScheduleMutations';
 import type { TemplateWithRules, RecurrenceRule } from '@/lib/api/schedule.api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -133,7 +141,15 @@ export default function TemplateBuilderDialog({
   onSaved,
 }: TemplateBuilderDialogProps) {
   const isEdit = !!template;
-  const queryClient = useQueryClient();
+
+  const createTemplateMutation = useCreateTemplateMutation();
+  const updateTemplateMutation = useUpdateTemplateMutation();
+  const createRuleMutation = useCreateRuleMutation();
+  const updateRuleMutation = useUpdateRuleMutation();
+  const deleteRuleMutation = useDeleteRuleMutation();
+  const createWindowMutation = useCreateWindowMutation();
+  const updateWindowMutation = useUpdateWindowMutation();
+  const deleteWindowMutation = useDeleteWindowMutation();
 
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState('Asia/Kolkata');
@@ -241,11 +257,14 @@ export default function TemplateBuilderDialog({
       let templateId: string;
 
       if (isEdit) {
-        await scheduleApi.updateTemplate(template.id, {
-          name: name.trim(),
-          timezone: resolvedTimezone,
-          effectiveFrom,
-          effectiveUntil: effectiveUntil || null,
+        await updateTemplateMutation.mutateAsync({
+          id: template.id,
+          data: {
+            name: name.trim(),
+            timezone: resolvedTimezone,
+            effectiveFrom,
+            effectiveUntil: effectiveUntil || null,
+          },
         });
         templateId = template.id;
 
@@ -255,64 +274,69 @@ export default function TemplateBuilderDialog({
 
         for (const deletedId of existingRuleIds) {
           if (!keptRuleIds.has(deletedId)) {
-            await scheduleApi.deleteRule(templateId, deletedId);
+            await deleteRuleMutation.mutateAsync({ templateId, ruleId: deletedId });
           }
         }
 
         for (const rule of rules) {
           if (rule.id) {
-            // Update existing rule
-            await scheduleApi.updateRule(templateId, rule.id, {
-              recurrenceType: rule.recurrenceType,
-              daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
-              intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
-              intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+            await updateRuleMutation.mutateAsync({
+              templateId,
+              ruleId: rule.id,
+              data: {
+                recurrenceType: rule.recurrenceType,
+                daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
+                intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
+                intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+              },
             });
 
-            // Sync windows for this rule
             const existingRule = template.rules.find((r) => r.id === rule.id);
             const existingWindowIds = new Set(existingRule?.windows.map((w) => w.id) ?? []);
             const keptWindowIds = new Set(rule.windows.filter((w) => w.id).map((w) => w.id!));
 
             for (const deletedWinId of existingWindowIds) {
               if (!keptWindowIds.has(deletedWinId)) {
-                await scheduleApi.deleteWindow(templateId, rule.id, deletedWinId);
+                await deleteWindowMutation.mutateAsync({ templateId, ruleId: rule.id, windowId: deletedWinId });
               }
             }
             for (const win of rule.windows) {
               if (win.id) {
-                await scheduleApi.updateWindow(templateId, rule.id, win.id, {
-                  windowStart: win.windowStart,
-                  windowEnd: win.windowEnd,
-                  label: win.label || null,
+                await updateWindowMutation.mutateAsync({
+                  templateId,
+                  ruleId: rule.id,
+                  windowId: win.id,
+                  data: { windowStart: win.windowStart, windowEnd: win.windowEnd, label: win.label || null },
                 });
               } else {
-                await scheduleApi.createWindow(templateId, rule.id, {
-                  windowStart: win.windowStart,
-                  windowEnd: win.windowEnd,
-                  label: win.label || null,
+                await createWindowMutation.mutateAsync({
+                  templateId,
+                  ruleId: rule.id,
+                  data: { windowStart: win.windowStart, windowEnd: win.windowEnd, label: win.label || null },
                 });
               }
             }
           } else {
-            // New rule
-            const created = await scheduleApi.createRule(templateId, {
-              recurrenceType: rule.recurrenceType,
-              daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
-              intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
-              intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+            const created = await createRuleMutation.mutateAsync({
+              templateId,
+              data: {
+                recurrenceType: rule.recurrenceType,
+                daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
+                intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
+                intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+              },
             });
             for (const win of rule.windows) {
-              await scheduleApi.createWindow(templateId, created.data.id, {
-                windowStart: win.windowStart,
-                windowEnd: win.windowEnd,
-                label: win.label || null,
+              await createWindowMutation.mutateAsync({
+                templateId,
+                ruleId: created.data.id,
+                data: { windowStart: win.windowStart, windowEnd: win.windowEnd, label: win.label || null },
               });
             }
           }
         }
       } else {
-        const res = await scheduleApi.createTemplate({
+        const res = await createTemplateMutation.mutateAsync({
           name: name.trim(),
           storeId: storeId ?? null,
           timezone: resolvedTimezone,
@@ -322,26 +346,26 @@ export default function TemplateBuilderDialog({
         templateId = res.data.id;
 
         for (const rule of rules) {
-          const created = await scheduleApi.createRule(templateId, {
-            recurrenceType: rule.recurrenceType,
-            daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
-            intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
-            intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+          const created = await createRuleMutation.mutateAsync({
+            templateId,
+            data: {
+              recurrenceType: rule.recurrenceType,
+              daysOfWeek: rule.recurrenceType === 'specific_days' ? rule.daysOfWeek : null,
+              intervalValue: rule.recurrenceType === 'interval' ? Number(rule.intervalValue) : null,
+              intervalUnit: rule.recurrenceType === 'interval' ? rule.intervalUnit : null,
+            },
           });
           for (const win of rule.windows) {
-            await scheduleApi.createWindow(templateId, created.data.id, {
-              windowStart: win.windowStart,
-              windowEnd: win.windowEnd,
-              label: win.label || null,
+            await createWindowMutation.mutateAsync({
+              templateId,
+              ruleId: created.data.id,
+              data: { windowStart: win.windowStart, windowEnd: win.windowEnd, label: win.label || null },
             });
           }
         }
       }
 
       toast.success(isEdit ? 'Template updated' : 'Template created');
-      queryClient.invalidateQueries({ queryKey: ['scheduleTemplates'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleTemplate'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleSlots'] });
       onSaved();
       onOpenChange(false);
     } catch (err: unknown) {

@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import StatusBadge from '@/components/common/StatusBadge';
-import { scheduleApi } from '@/lib/api/schedule.api';
 import type { ScheduleSlot } from '@/lib/api/schedule.api';
+import { useUpdateSlotStatusMutation } from '@/hooks/mutations/useScheduleMutations';
 import { toast } from 'sonner';
 
 interface DayDetailDialogProps {
@@ -37,6 +37,7 @@ export default function DayDetailDialog({
   onRefresh,
 }: DayDetailDialogProps) {
   const [busy, setBusy] = useState<string | null>(null);
+  const updateSlotStatus = useUpdateSlotStatusMutation();
 
   const formatted = new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
     weekday: 'long',
@@ -51,7 +52,7 @@ export default function DayDetailDialog({
   ) => {
     setBusy(slot.id);
     try {
-      await scheduleApi.updateSlotStatus(slot.id, status);
+      await updateSlotStatus.mutateAsync({ slotId: slot.id, status });
       toast.success(`Slot ${status}`);
       onRefresh();
     } catch {

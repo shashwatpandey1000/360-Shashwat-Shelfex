@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { zonesApi } from '@/lib/api/zones.api';
+import { useUpdateZoneMutation } from '@/hooks/mutations/useZoneMutations';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import {
@@ -22,7 +22,7 @@ interface EditZoneDialogProps {
 }
 
 export default function EditZoneDialog({ zone, allZones, onUpdated, onClose }: EditZoneDialogProps) {
-  const [submitting, setSubmitting] = useState(false);
+  const updateZone = useUpdateZoneMutation();
 
   const [name, setName] = useState(zone.name);
   const [description, setDescription] = useState(zone.description || '');
@@ -55,20 +55,20 @@ export default function EditZoneDialog({ zone, allZones, onUpdated, onClose }: E
       return;
     }
 
-    setSubmitting(true);
     try {
-      await zonesApi.update(zone.id, {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        parentZoneId: parentZoneId || null,
+      await updateZone.mutateAsync({
+        id: zone.id,
+        data: {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          parentZoneId: parentZoneId || null,
+        },
       });
       toast.success('Zone updated');
       onUpdated();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to update zone';
       toast.error(msg);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -108,9 +108,9 @@ export default function EditZoneDialog({ zone, allZones, onUpdated, onClose }: E
           <CustomButton variant="secondary" size="sm" onClick={onClose}>
             Cancel
           </CustomButton>
-          <CustomButton size="sm" onClick={handleSubmit} disabled={submitting}>
-            {submitting && <Loader2 size={14} className="mr-1 animate-spin" />}
-            {submitting ? 'Saving...' : 'Save Changes'}
+          <CustomButton size="sm" onClick={handleSubmit} disabled={updateZone.isPending}>
+            {updateZone.isPending && <Loader2 size={14} className="mr-1 animate-spin" />}
+            {updateZone.isPending ? 'Saving...' : 'Save Changes'}
           </CustomButton>
         </DialogFooter>
       </DialogContent>

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { employeesApi } from '@/lib/api';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { CustomInput } from '@/components/common/input';
@@ -138,29 +137,13 @@ export default function StoreDetailPage() {
   const categories =
     (categoriesQuery.data?.data as { id: string; name: string }[] | undefined) ?? [];
 
-  const employeesQuery = useQuery({
-    queryKey: [
-      'employees',
-      {
-        storeId: id,
-        page: empPage,
-        perPage: 25,
-        search: empSearch || undefined,
-        sortBy: 'roleTemplate',
-        sortOrder: 'asc',
-      },
-    ],
-    queryFn: () =>
-      employeesApi.list({
-        storeId: id as string,
-        page: empPage,
-        perPage: 25,
-        search: empSearch || undefined,
-        sortBy: 'roleTemplate',
-        sortOrder: 'asc',
-      }),
-    enabled: activeTab === 'Employees',
-    placeholderData: (prev: any) => prev,
+  const employeesQuery = useEmployeesQuery({
+    storeId: id as string,
+    page: empPage,
+    perPage: 25,
+    search: empSearch || undefined,
+    sortBy: 'roleTemplate',
+    sortOrder: 'asc',
   });
 
   const employees = (employeesQuery.data?.data?.data as EmployeeRow[] | undefined) ?? [];

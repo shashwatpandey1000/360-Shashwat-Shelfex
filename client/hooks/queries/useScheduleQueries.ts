@@ -31,19 +31,23 @@ export function useStoreEffectiveTemplateQuery(storeId: string) {
   });
 }
 
-export function useScheduleSlotsQuery(params?: {
-  page?: number;
-  perPage?: number;
-  storeId?: string;
-  status?: SlotStatus;
-  dateFrom?: string;
-  dateTo?: string;
-  sortOrder?: "asc" | "desc";
-}) {
+export function useScheduleSlotsQuery(
+  params?: {
+    page?: number;
+    perPage?: number;
+    storeId?: string;
+    status?: SlotStatus;
+    dateFrom?: string;
+    dateTo?: string;
+    sortOrder?: "asc" | "desc";
+  },
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ["scheduleSlots", params],
     queryFn: () => scheduleApi.listSlots(params),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
 

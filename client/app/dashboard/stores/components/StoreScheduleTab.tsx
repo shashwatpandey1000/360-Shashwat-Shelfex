@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import type { ScheduleSlot, SlotStatus, TemplateWithRules } from '@/lib/api/schedule.api';
-import { employeesApi } from '@/lib/api';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
 import { useStoreEffectiveTemplateQuery, useScheduleTemplateQuery, useScheduleSlotsQuery } from '@/hooks/queries/useScheduleQueries';
 import { useMaterializeTemplateMutation, useAssignSurveyorMutation } from '@/hooks/mutations/useScheduleMutations';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
@@ -101,11 +100,11 @@ export default function StoreScheduleTab({
   const slotsLoading = slotsQuery.isLoading;
 
   // ── Surveyor search query (only when assign dialog is open) ─────────────
-  const surveyorQuery = useQuery({
-    queryKey: ['employees', { storeId, search: surveyorSearch || undefined, roleTemplate: 'surveyor', perPage: 20 }],
-    queryFn: () => employeesApi.list({ storeId, search: surveyorSearch || undefined, roleTemplate: 'surveyor', perPage: 20 }),
-    enabled: !!assignSlot,
-    placeholderData: (prev: any) => prev,
+  const surveyorQuery = useEmployeesQuery({
+    storeId,
+    search: surveyorSearch || undefined,
+    roleTemplate: 'surveyor',
+    perPage: 20,
   });
   const surveyors = (surveyorQuery.data?.data?.data as Array<{ id: string; name: string | null; email: string }> | undefined) ?? [];
 

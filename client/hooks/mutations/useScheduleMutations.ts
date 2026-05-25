@@ -130,8 +130,8 @@ export function useDeleteWindowMutation() {
 export function useAssignSurveyorMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ slotId, surveyorId }: { slotId: string; surveyorId: string }) =>
-      scheduleApi.assignSurveyor(slotId, surveyorId),
+    mutationFn: ({ slotId, surveyorId, force }: { slotId: string; surveyorId: string; force?: boolean }) =>
+      scheduleApi.assignSurveyor(slotId, surveyorId, force),
     onSuccess: (_, { slotId }) => {
       queryClient.invalidateQueries({ queryKey: ["scheduleSlot", slotId] });
       queryClient.invalidateQueries({ queryKey: ["scheduleSlots"] });

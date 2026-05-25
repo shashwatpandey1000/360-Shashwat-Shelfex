@@ -258,8 +258,8 @@ export const scheduleApi = {
     return res.data as { success: boolean; data: ScheduleSlot };
   },
 
-  async assignSurveyor(slotId: string, surveyorId: string) {
-    const res = await apiClient.patch(`/schedules/slots/${slotId}/assign`, { surveyorId });
+  async assignSurveyor(slotId: string, surveyorId: string, force?: boolean) {
+    const res = await apiClient.patch(`/schedules/slots/${slotId}/assign`, { surveyorId, ...(force ? { force } : {}) });
     return res.data as { success: boolean; data: ScheduleSlot };
   },
 

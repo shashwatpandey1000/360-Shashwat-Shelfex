@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { surveysApi } from '@/lib/api/surveys.api';
+import { useSurveysQuery } from '@/hooks/queries/useSurveyQueries';
 import type { Survey } from '@/lib/api/surveys.api';
 import { DataTable, TableConfig } from '@/components/common/table/dataTable';
 import StatusBadge from '@/components/common/StatusBadge';
@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
 import { CalendarDays, MoreHorizontal } from 'lucide-react';
 
 interface StoreSurveysTabProps {
@@ -30,38 +29,25 @@ function minusDays(n: number) {
 export default function StoreSurveysTab({ storeId }: StoreSurveysTabProps) {
   const router = useRouter();
 
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFrom, setDateFrom] = useState(minusDays(30));
   const [dateTo, setDateTo] = useState(todayStr());
 
-  const fetchSurveys = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await surveysApi.list({
-        storeId,
-        page,
-        perPage: 25,
-        status: (statusFilter as any) || undefined,
-        dateFrom,
-        dateTo,
-        sortOrder: 'desc',
-      });
-      setSurveys(res.data.data);
-      setTotal(res.data.total);
-      setTotalPages(res.data.totalPages);
-    } catch {
-      toast.error('Failed to load surveys');
-    } finally {
-      setLoading(false);
-    }
-  }, [storeId, page, statusFilter, dateFrom, dateTo]);
+  const surveysQuery = useSurveysQuery({
+    storeId,
+    page,
+    perPage: 25,
+    status: (statusFilter as any) || undefined,
+    dateFrom,
+    dateTo,
+    sortOrder: 'desc',
+  });
 
-  useEffect(() => { fetchSurveys(); }, [fetchSurveys]);
+  const surveys: Survey[] = surveysQuery.data?.data?.data ?? [];
+  const total = surveysQuery.data?.data?.total ?? 0;
+  const totalPages = surveysQuery.data?.data?.totalPages ?? 1;
+  const loading = surveysQuery.isLoading;
 
   const tableConfig: TableConfig<Survey> = {
     uniqueKey: 'id',

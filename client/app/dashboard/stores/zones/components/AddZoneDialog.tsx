@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { CustomInput } from '@/components/common/input';
 import { CustomButton } from '@/components/common/button';
-import { zonesApi } from '@/lib/api/zones.api';
+import { useCreateZoneMutation } from '@/hooks/mutations/useZoneMutations';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import {
@@ -23,7 +23,7 @@ interface AddZoneDialogProps {
 
 export default function AddZoneDialog({ allZones, onCreated, trigger }: AddZoneDialogProps) {
   const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const createZone = useCreateZoneMutation();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -41,9 +41,8 @@ export default function AddZoneDialog({ allZones, onCreated, trigger }: AddZoneD
       return;
     }
 
-    setSubmitting(true);
     try {
-      await zonesApi.create({
+      await createZone.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
         parentZoneId: parentZoneId || null,
@@ -55,8 +54,6 @@ export default function AddZoneDialog({ allZones, onCreated, trigger }: AddZoneD
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to create zone';
       toast.error(msg);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -98,9 +95,9 @@ export default function AddZoneDialog({ allZones, onCreated, trigger }: AddZoneD
           <CustomButton variant="secondary" size="sm" onClick={() => setOpen(false)}>
             Cancel
           </CustomButton>
-          <CustomButton size="sm" onClick={handleSubmit} disabled={submitting}>
-            {submitting && <Loader2 size={14} className="mr-1 animate-spin" />}
-            {submitting ? 'Creating...' : 'Create Zone'}
+          <CustomButton size="sm" onClick={handleSubmit} disabled={createZone.isPending}>
+            {createZone.isPending && <Loader2 size={14} className="mr-1 animate-spin" />}
+            {createZone.isPending ? 'Creating...' : 'Create Zone'}
           </CustomButton>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PlusCircle, Trash2, User, Clock, Store, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { scheduleApi } from '@/lib/api/schedule.api';
-import { employeesApi } from '@/lib/api/employees.api';
-import { storesApi } from '@/lib/api/stores.api';
+import { useScheduleAssignmentsQuery } from '@/hooks/queries/useScheduleQueries';
+import { useStoreEffectiveTemplateQuery, useScheduleTemplateQuery } from '@/hooks/queries/useScheduleQueries';
+import { useStoresQuery } from '@/hooks/queries/useStoreQueries';
+import { useEmployeesQuery } from '@/hooks/queries/useEmployeeQueries';
+import {
+  useCreateAssignmentMutation,
+  useDeleteAssignmentMutation,
+} from '@/hooks/mutations/useScheduleMutations';
 import type { PersistentAssignment } from '@/lib/api/schedule.api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,37 +56,22 @@ interface AssignmentsTabProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AssignmentsTab({ canWrite, storeId }: AssignmentsTabProps) {
-  const [assignments, setAssignments] = useState<PersistentAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const fetchAssignments = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await scheduleApi.listAssignments(storeId);
-      setAssignments(res.data);
-    } catch {
-      toast.error('Failed to load assignments');
-    } finally {
-      setLoading(false);
-    }
-  }, [storeId]);
-
-  useEffect(() => {
-    fetchAssignments();
-  }, [fetchAssignments]);
+  const assignmentsQuery = useScheduleAssignmentsQuery(storeId);
+  const assignments: PersistentAssignment[] = assignmentsQuery.data?.data ?? [];
+  const deleteAssignment = useDeleteAssignmentMutation();
 
   const handleDelete = async (id: string) => {
     try {
-      await scheduleApi.deleteAssignment(id);
+      await deleteAssignment.mutateAsync(id);
       toast.success('Assignment removed');
-      fetchAssignments();
     } catch {
       toast.error('Failed to remove assignment');
     }
   };
 
-  if (loading) {
+  if (assignmentsQuery.isLoading) {
     return <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Loading…</p>;
   }
 
@@ -197,10 +187,7 @@ export default function AssignmentsTab({ canWrite, storeId }: AssignmentsTabProp
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         defaultStoreId={storeId}
-        onCreated={() => {
-          fetchAssignments();
-          setDialogOpen(false);
-        }}
+        onCreated={() => setDialogOpen(false)}
       />
     </div>
   );
@@ -215,78 +202,63 @@ interface AddAssignmentDialogProps {
   onCreated: () => void;
 }
 
+const RECURRENCE_SHORT: Record<string, string> = {
+  daily: 'Daily',
+  weekdays: 'Weekdays',
+  specific_days: 'Specific days',
+  odd_days: 'Odd days',
+  even_days: 'Even days',
+  interval: 'Interval',
+};
+
 function AddAssignmentDialog({
   open,
   onOpenChange,
   defaultStoreId,
   onCreated,
 }: AddAssignmentDialogProps) {
-  const [stores, setStores] = useState<StoreOption[]>([]);
-  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
-  const [ruleWindows, setRuleWindows] = useState<RuleWindowOption[]>([]);
-
   const [selectedStoreId, setSelectedStoreId] = useState(defaultStoreId ?? '');
   const [selectedRuleWindow, setSelectedRuleWindow] = useState('');
   const [selectedSurveyorId, setSelectedSurveyorId] = useState('');
-  const [loadingOptions, setLoadingOptions] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setSelectedStoreId(defaultStoreId ?? '');
     setSelectedRuleWindow('');
     setSelectedSurveyorId('');
-
-    setLoadingOptions(true);
-    Promise.all([
-      defaultStoreId ? Promise.resolve(null) : storesApi.list({ perPage: 200 }).then((r) => r.data),
-      employeesApi
-        .list({ roleTemplate: 'surveyor', status: 'active', perPage: 200 })
-        .then((r) => r.data),
-    ])
-      .then(([storeData, surveyorData]) => {
-        if (storeData) setStores(storeData.data ?? []);
-        setSurveyors(surveyorData?.data ?? []);
-      })
-      .catch(() => toast.error('Failed to load options'))
-      .finally(() => setLoadingOptions(false));
   }, [open, defaultStoreId]);
 
-  // When store changes, load its effective template to get rules/windows
-  useEffect(() => {
-    const sid = selectedStoreId || defaultStoreId;
-    if (!sid) {
-      setRuleWindows([]);
-      return;
+  const storesQuery = useStoresQuery({ perPage: 200 });
+  const stores: StoreOption[] = storesQuery.data?.data?.data ?? [];
+
+  const surveyorsQuery = useEmployeesQuery({ roleTemplate: 'surveyor', status: 'active', perPage: 200 });
+  const surveyors: Surveyor[] = surveyorsQuery.data?.data?.data ?? [];
+
+  const effectiveStoreId = selectedStoreId || defaultStoreId || '';
+  const effectiveTemplateQuery = useStoreEffectiveTemplateQuery(effectiveStoreId);
+  const templateId = effectiveTemplateQuery.data?.data?.id ?? '';
+  const templateQuery = useScheduleTemplateQuery(templateId);
+
+  const ruleWindows: RuleWindowOption[] = useMemo(() => {
+    const rules = templateQuery.data?.data?.rules;
+    if (!rules) return [];
+    const opts: RuleWindowOption[] = [];
+    for (const rule of rules) {
+      const ruleLabel = RECURRENCE_SHORT[rule.recurrenceType] ?? rule.recurrenceType;
+      for (const win of rule.windows) {
+        opts.push({
+          ruleId: rule.id,
+          ruleLabel,
+          windowId: win.id,
+          windowLabel: `${ruleLabel} · ${win.windowStart.substring(0, 5)}–${win.windowEnd.substring(0, 5)}${win.label ? ' · ' + win.label : ''}`,
+        });
+      }
     }
-    scheduleApi
-      .getStoreEffectiveTemplate(sid)
-      .then(async (res) => {
-        const tmpl = await scheduleApi.getTemplate(res.data.id);
-        const opts: RuleWindowOption[] = [];
-        const RECURRENCE_SHORT: Record<string, string> = {
-          daily: 'Daily',
-          weekdays: 'Weekdays',
-          specific_days: 'Specific days',
-          odd_days: 'Odd days',
-          even_days: 'Even days',
-          interval: 'Interval',
-        };
-        for (const rule of tmpl.data.rules) {
-          const ruleLabel = RECURRENCE_SHORT[rule.recurrenceType] ?? rule.recurrenceType;
-          for (const win of rule.windows) {
-            opts.push({
-              ruleId: rule.id,
-              ruleLabel,
-              windowId: win.id,
-              windowLabel: `${ruleLabel} · ${win.windowStart.substring(0, 5)}–${win.windowEnd.substring(0, 5)}${win.label ? ' · ' + win.label : ''}`,
-            });
-          }
-        }
-        setRuleWindows(opts);
-      })
-      .catch(() => setRuleWindows([]));
-  }, [selectedStoreId, defaultStoreId]);
+    return opts;
+  }, [templateQuery.data]);
+
+  const createAssignment = useCreateAssignmentMutation();
+  const loadingOptions = surveyorsQuery.isLoading || (!defaultStoreId && storesQuery.isLoading);
 
   const handleCreate = async () => {
     const storeId = selectedStoreId || defaultStoreId;
@@ -296,9 +268,8 @@ function AddAssignmentDialog({
 
     const [ruleId, windowId] = selectedRuleWindow.split('::');
 
-    setSaving(true);
     try {
-      await scheduleApi.createAssignment({
+      await createAssignment.mutateAsync({
         storeId,
         recurrenceRuleId: ruleId,
         timeWindowId: windowId,
@@ -309,8 +280,6 @@ function AddAssignmentDialog({
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       toast.error(e.response?.data?.message ?? 'Failed to create assignment');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -427,16 +396,16 @@ function AddAssignmentDialog({
             variant="ghost"
             className="rounded-md border px-4 text-[13px] hover:border-black hover:bg-gray-200 dark:hover:border-white dark:hover:bg-neutral-800"
             onClick={() => onOpenChange(false)}
-            disabled={saving}
+            disabled={createAssignment.isPending}
           >
             Cancel
           </Button>
           <Button
             className="rounded-md px-4 text-[13px]"
             onClick={handleCreate}
-            disabled={saving || loadingOptions}
+            disabled={createAssignment.isPending || loadingOptions}
           >
-            {saving ? 'Saving…' : 'Create Assignment'}
+            {createAssignment.isPending ? 'Saving…' : 'Create Assignment'}
           </Button>
         </DialogFooter>
       </DialogContent>
