@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import app from './app';
-import validateEnv from './utils/validateEnv';
-import logger from './utils/logger';
+import validateEnv from './shared/utils/validateEnv';
+import logger from './shared/utils/logger';
 import cron from 'node-cron';
-import { materializeAllOrgs, getMaterializationWindow } from './services/schedule.materializer';
+import { materializeAllOrgs, getMaterializationWindow } from './modules/schedule';
 
 validateEnv();
 

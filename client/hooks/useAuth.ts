@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
-import { useCurrentUserQuery } from '@/hooks/queries/useAuthQueries';
+import { useCurrentUserQuery } from '@/features/auth/queries';
 
 async function performLogout(queryClient: ReturnType<typeof useQueryClient>) {
   // Clear 360 cookies in parallel from both servers (Express revokes the SSO

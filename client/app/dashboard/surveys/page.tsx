@@ -1,5 +1,2 @@
-import ComingSoon from '@/components/common/ComingSoon';
-
-export default function SurveysPage() {
-  return <ComingSoon feature="Surveys" />;
-}
+import { SurveyList } from '@/features/surveys';
+export default function SurveysPage() { return <SurveyList />; }
