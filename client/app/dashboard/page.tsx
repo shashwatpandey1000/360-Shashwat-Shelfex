@@ -2,7 +2,7 @@
 
 import ComingSoon from '@/components/common/ComingSoon';
 import { useAuth } from '@/hooks/useAuth';
-import { useStoresQuery } from '@/hooks/queries/useStoreQueries';
+import { useStoresQuery } from '@/features/stores';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
