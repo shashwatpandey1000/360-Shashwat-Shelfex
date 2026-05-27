@@ -32,7 +32,7 @@ export default function TourViewerModal({
 
   useEffect(() => {
     if (open) setSceneIndex(0);
-  }, [open]);
+  }, [open, storeId]);
 
   function renderBody() {
     if (isLoading) {
@@ -69,7 +69,13 @@ export default function TourViewerModal({
         </div>
       );
     }
-    if (!currentScene) return null;
+    if (!currentScene) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm text-white/50">Loading scene...</p>
+        </div>
+      );
+    }
 
     return (
       <div className="relative h-full w-full">
