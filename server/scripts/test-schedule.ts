@@ -9,14 +9,14 @@
  */
 
 import 'dotenv/config';
-import { doesDateMatchRule, generateIdempotencyKey, materializeForStore } from '../src/services/schedule.materializer';
+import { doesDateMatchRule, generateIdempotencyKey, materializeForStore } from '../src/modules/schedule/schedule.materializer';
 import { DateTime } from 'luxon';
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
 
 const green = (s: string) => `\x1b[32m✓ ${s}\x1b[0m`;
-const red   = (s: string) => `\x1b[31m✗ ${s}\x1b[0m`;
-const bold  = (s: string) => `\x1b[1m${s}\x1b[0m`;
+const red = (s: string) => `\x1b[31m✗ ${s}\x1b[0m`;
+const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 
 let passed = 0;
 let failed = 0;
@@ -58,22 +58,22 @@ expectTrue('daily: Monday matches', doesDateMatchRule(MON, { recurrenceType: 'da
 expectTrue('daily: Sunday matches', doesDateMatchRule(SUN, { recurrenceType: 'daily' }, '2026-01-01'));
 
 // weekdays
-expectTrue('weekdays: Monday matches',   doesDateMatchRule(MON, { recurrenceType: 'weekdays' }, '2026-01-01'));
-expectTrue('weekdays: Tuesday matches',  doesDateMatchRule(TUE, { recurrenceType: 'weekdays' }, '2026-01-01'));
+expectTrue('weekdays: Monday matches', doesDateMatchRule(MON, { recurrenceType: 'weekdays' }, '2026-01-01'));
+expectTrue('weekdays: Tuesday matches', doesDateMatchRule(TUE, { recurrenceType: 'weekdays' }, '2026-01-01'));
 expectFalse('weekdays: Saturday skipped', doesDateMatchRule(SAT, { recurrenceType: 'weekdays' }, '2026-01-01'));
-expectFalse('weekdays: Sunday skipped',   doesDateMatchRule(SUN, { recurrenceType: 'weekdays' }, '2026-01-01'));
+expectFalse('weekdays: Sunday skipped', doesDateMatchRule(SUN, { recurrenceType: 'weekdays' }, '2026-01-01'));
 
 // specific_days (Mon=1, Wed=3, Fri=5)
 const specificRule = { recurrenceType: 'specific_days', daysOfWeek: [1, 3, 5] };
-expectTrue('specific_days: Monday matches',    doesDateMatchRule(MON, specificRule, '2026-01-01'));
+expectTrue('specific_days: Monday matches', doesDateMatchRule(MON, specificRule, '2026-01-01'));
 expectFalse('specific_days: Tuesday skipped', doesDateMatchRule(TUE, specificRule, '2026-01-01'));
 expectFalse('specific_days: Saturday skipped', doesDateMatchRule(SAT, specificRule, '2026-01-01'));
 
 // odd / even
-expectTrue('odd_days: 3rd matches',   doesDateMatchRule(ODD, { recurrenceType: 'odd_days' }, '2026-01-01'));
-expectFalse('odd_days: 4th skipped',  doesDateMatchRule(EVN, { recurrenceType: 'odd_days' }, '2026-01-01'));
+expectTrue('odd_days: 3rd matches', doesDateMatchRule(ODD, { recurrenceType: 'odd_days' }, '2026-01-01'));
+expectFalse('odd_days: 4th skipped', doesDateMatchRule(EVN, { recurrenceType: 'odd_days' }, '2026-01-01'));
 expectFalse('even_days: 3rd skipped', doesDateMatchRule(ODD, { recurrenceType: 'even_days' }, '2026-01-01'));
-expectTrue('even_days: 4th matches',  doesDateMatchRule(EVN, { recurrenceType: 'even_days' }, '2026-01-01'));
+expectTrue('even_days: 4th matches', doesDateMatchRule(EVN, { recurrenceType: 'even_days' }, '2026-01-01'));
 
 // interval — every 3 days starting 2026-05-01
 const ivlRule = { recurrenceType: 'interval', intervalValue: 3, intervalUnit: 'day' };

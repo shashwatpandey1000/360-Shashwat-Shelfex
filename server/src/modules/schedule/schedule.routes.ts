@@ -40,6 +40,7 @@ import {
   updateRuleSchema,
   createWindowSchema,
   updateWindowSchema,
+  createAssignmentSchema,
 } from './schedule.controller';
 
 const router = Router();
@@ -133,6 +134,7 @@ router.get('/assignments', requirePermission('schedule:read'), listAssignmentsHa
 router.post(
   '/assignments',
   requirePermission('employees:manage'),
+  validate(createAssignmentSchema),
   createAssignmentHandler,
 );
 router.delete(

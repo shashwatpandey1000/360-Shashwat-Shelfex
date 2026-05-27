@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authMiddleware } from '../../shared/middlewares/auth.middleware';
 import { tenantContext } from '../../shared/middlewares/tenant.middleware';
 import { requirePermission } from '../../shared/middlewares/permission.middleware';
+import { validate } from '../../shared/middlewares/validate.middleware';
+import { startSurveySchema } from './survey.types';
 import { start, addScene, addPhoto, submit, getUploadUrl, list, detail, mySlots } from './survey.controller';
 
 const router = Router();
@@ -12,7 +14,7 @@ router.use(authMiddleware, tenantContext);
 router.get('/my-slots', mySlots);
 
 // Survey lifecycle (mobile capture app)
-router.post('/start', requirePermission('surveys:execute'), start);
+router.post('/start', requirePermission('surveys:execute'), validate(startSurveySchema), start);
 router.post('/:id/scenes', requirePermission('surveys:execute'), addScene);
 router.post('/:id/photos', requirePermission('surveys:execute'), addPhoto);
 router.post('/:id/submit', requirePermission('surveys:execute'), submit);
