@@ -26,7 +26,7 @@ import { GOOGLE_MAPS_CONFIG } from '@/lib/google-maps';
 import { STORE_PIN_COLOR, STORE_PIN_PATH, storeMapStyles } from '@/lib/google-maps-styles';
 import { cn } from '@/lib/utils';
 import { useStoreByIdQuery } from '../queries';
-import { useActiveStoreTourQuery } from '@/features/tours';
+import { useActiveStoreTourQuery, TourViewerModal } from '@/features/tours';
 import { useStoreCategoriesQuery } from '@/features/lookups';
 import { useDeactivateStoreMutation } from '../mutations';
 import { useDeactivateEmployeeMutation } from '@/features/employees';
@@ -124,6 +124,7 @@ export default function StoreDetail({ id }: StoreDetailProps) {
   const [empPage, setEmpPage] = useState(1);
   const [empSearch, setEmpSearch] = useState('');
   const [empSearchInput, setEmpSearchInput] = useState('');
+  const [tourViewerOpen, setTourViewerOpen] = useState(false);
 
   const { isLoaded: mapsLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
@@ -462,6 +463,16 @@ export default function StoreDetail({ id }: StoreDetailProps) {
                   <DetailRow label="Scenes" value={String(activeTour.sceneCount)} />
                   <DetailRow label="Shelves" value={String(activeTour.shelfCount)} />
                   <DetailRow label="Captured" value={new Date(activeTour.createdAt).toLocaleDateString()} />
+                  <div className="pt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs"
+                      onClick={() => setTourViewerOpen(true)}
+                    >
+                      🔭 View Tour
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -571,6 +582,14 @@ export default function StoreDetail({ id }: StoreDetailProps) {
             </div>
           )}
         </div>
+      )}
+      {store && (
+        <TourViewerModal
+          storeId={id}
+          storeName={store.name}
+          open={tourViewerOpen}
+          onClose={() => setTourViewerOpen(false)}
+        />
       )}
     </section>
   );
