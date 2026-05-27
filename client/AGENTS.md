@@ -112,19 +112,57 @@ export function useMyResourceQuery(id: string) {
 **POST / PUT / PATCH / DELETE → `mutations.ts`**
 ```ts
 // mutations.ts
+'use client';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { myFeatureApi } from './api';
 
 export function useCreateMyResourceMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input) => myFeatureApi.create(input),
+    mutationFn: (data: CreateMyResourceData) => myFeatureApi.create(data),
     onSuccess: () => {
+      // Invalidate cache so lists refresh automatically
       queryClient.invalidateQueries({ queryKey: ['myResource'] });
     },
   });
 }
 ```
+
+**Using hooks inside a component:**
+
+```tsx
+// features/myFeature/components/MyDialog.tsx
+import { useCreateMyResourceMutation } from '../mutations'; // same feature → relative import
+import { useStoresQuery } from '@/features/stores';        // cross-feature → absolute via index.ts
+
+export default function MyDialog() {
+  const createMutation = useCreateMyResourceMutation();
+
+  const handleSubmit = () => {
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        toast.success('Created!');
+        setOpen(false); // UI side effects go at the call site, not in the hook
+      },
+      onError: (err: any) => {
+        toast.error(err.response?.data?.message || 'Something went wrong');
+      },
+    });
+  };
+
+  return (
+    <button disabled={createMutation.isPending} onClick={handleSubmit}>
+      {createMutation.isPending ? 'Saving...' : 'Save'}
+    </button>
+  );
+}
+```
+
+**Import rules:**
+- Within the same feature → import directly: `import { useCreateMyResourceMutation } from '../mutations'`
+- Cross-feature → import via the feature's `index.ts`: `import { useStoresQuery } from '@/features/stores'`
+- Never import from a deep internal path of another feature (e.g. `@/features/stores/queries`)
 
 **Never call `api.ts` functions directly inside a component.** Always go through a hook in `queries.ts` or `mutations.ts`.
 
