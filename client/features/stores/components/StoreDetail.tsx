@@ -20,7 +20,7 @@ import StoreScheduleTab from './StoreScheduleTab';
 import StoreSurveysTab from './StoreSurveysTab';
 import type { Tour } from '@/features/tours';
 import { toast } from 'sonner';
-import { MapPin, MoreHorizontal, Pencil, Store, Trash2, Users } from 'lucide-react';
+import { Eye, MapPin, MoreHorizontal, Pencil, Store, Trash2, Users } from 'lucide-react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import { GOOGLE_MAPS_CONFIG } from '@/lib/google-maps';
 import { STORE_PIN_COLOR, STORE_PIN_PATH, storeMapStyles } from '@/lib/google-maps-styles';
@@ -470,7 +470,8 @@ export default function StoreDetail({ id }: StoreDetailProps) {
                       className="w-full text-xs"
                       onClick={() => setTourViewerOpen(true)}
                     >
-                      🔭 View Tour
+                      <Eye className="mr-1 h-3 w-3" />
+                      View Tour
                     </Button>
                   </div>
                 </div>

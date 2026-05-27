@@ -22,10 +22,10 @@ export function useTourByIdQuery(id: string) {
   });
 }
 
-export function useActiveStoreTourQuery(storeId: string) {
+export function useActiveStoreTourQuery(storeId: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["tour", "active", storeId],
     queryFn: () => toursApi.getActiveForStore(storeId),
-    enabled: !!storeId,
+    enabled: !!storeId && (options?.enabled ?? true),
   });
 }

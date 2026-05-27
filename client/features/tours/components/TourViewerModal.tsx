@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { X } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Globe, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useActiveStoreTourQuery } from '../queries';
 import SceneNavControls from './SceneNavControls';
 import type { TourScene } from '../api';
@@ -25,7 +25,7 @@ export default function TourViewerModal({
 }: TourViewerModalProps) {
   const [sceneIndex, setSceneIndex] = useState(0);
 
-  const { data, isLoading, isError, refetch } = useActiveStoreTourQuery(storeId);
+  const { data, isLoading, isError, refetch } = useActiveStoreTourQuery(storeId, { enabled: open });
   const tour = data?.data ?? null;
   const scenes: TourScene[] = tour?.scenes ?? [];
   const currentScene: TourScene | null = scenes[sceneIndex] ?? null;
@@ -97,9 +97,13 @@ export default function TourViewerModal({
         showCloseButton={false}
         className="flex h-screen w-screen max-w-none flex-col gap-0 rounded-none border-0 bg-gray-950 p-0"
       >
+        <DialogTitle className="sr-only">{storeName} — 360° Tour</DialogTitle>
         {/* Top bar */}
         <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 py-3">
-          <span className="text-sm font-semibold text-white">🔭 {storeName} — Tour</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
+              <Globe className="h-4 w-4" />
+              {storeName} — Tour
+            </span>
           <button
             onClick={onClose}
             className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/70 hover:text-white"
