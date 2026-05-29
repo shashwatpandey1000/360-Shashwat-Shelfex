@@ -14,6 +14,7 @@ const validateEnv = () => {
     RESEND_API_KEY: str(),
     RESEND_FROM_EMAIL: str(),
     SSO_FRONTEND_URL: str(),
+    INTROSPECT_API_KEY: str(),
     // Optional — S3 presigned URL generation falls through if absent
     AWS_ACCESS_KEY_ID: str({ default: '' }),
     AWS_SECRET_ACCESS_KEY: str({ default: '' }),

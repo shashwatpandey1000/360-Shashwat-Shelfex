@@ -1,8 +1,14 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
 import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
+import { AccessTokenPayload } from '../middlewares/auth.middleware';
+
+// Which SSO client apps are permitted to use the introspection endpoint. Hard-coded so
+// a leaked service API key alone can't be used to validate tokens for arbitrary apps.
+const INTROSPECT_ALLOWED_CLIENT_IDS = new Set(['masterapp']);
 
 const SSO_API_URL = process.env.SSO_API_URL!;
 const SSO_CLIENT_ID = process.env.SSO_CLIENT_ID!;
@@ -109,6 +115,45 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
     res.clearCookie('refresh_token', { path: '/' });
 
     ApiResponse.unauthorized(res, 'Token refresh failed');
+  }
+});
+
+// POST /auth/introspect - Service-to-service token validation (RFC 7662 style).
+// Caller must present a valid x-api-key (gated by serviceAuthMiddleware) and supply
+// the SSO access token + the clientId it claims to belong to. Returns { active: true,
+// userId, email, expiresAt } on success, or { active: false } on any failure.
+export const introspect = asyncHandler(async (req: Request, res: Response) => {
+  const { token, clientId } = req.body; // validated by Zod middleware
+
+  if (!INTROSPECT_ALLOWED_CLIENT_IDS.has(clientId)) {
+    logger.warn(`Introspect rejected: clientId "${clientId}" is not allowlisted`);
+    ApiResponse.success(res, { active: false });
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!, {
+      issuer: 'accounts.shelfex.com',
+      audience: 'shelfex-services',
+    }) as AccessTokenPayload & { exp?: number };
+
+    ApiResponse.success(res, {
+      active: true,
+      userId: decoded.userId,
+      email: decoded.email,
+      emailVerified: decoded.emailVerified,
+      clientId,
+      expiresAt: decoded.exp ?? null,
+    });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      logger.info('Introspect: token expired');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      logger.warn(`Introspect: invalid token (${error.message})`);
+    } else {
+      logger.error(`Introspect: unexpected verify error: ${error}`);
+    }
+    ApiResponse.success(res, { active: false });
   }
 });
 
