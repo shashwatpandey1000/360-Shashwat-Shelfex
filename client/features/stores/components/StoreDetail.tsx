@@ -26,7 +26,8 @@ import { GOOGLE_MAPS_CONFIG } from '@/lib/google-maps';
 import { STORE_PIN_COLOR, STORE_PIN_PATH, storeMapStyles } from '@/lib/google-maps-styles';
 import { cn } from '@/lib/utils';
 import { useStoreByIdQuery } from '../queries';
-import { useActiveStoreTourQuery, TourViewerModal } from '@/features/tours';
+import { useActiveStoreTourQuery } from '@/features/tours';
+import type { TourScene } from '@/features/tours';
 import { useStoreCategoriesQuery } from '@/features/lookups';
 import { useDeactivateStoreMutation } from '../mutations';
 import { useDeactivateEmployeeMutation } from '@/features/employees';
@@ -70,6 +71,18 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const TABS = ['Overview', 'Surveys', 'Employees', 'Schedule'] as const;
+
+const DEV_MOCK_SCENES: TourScene[] =
+  process.env.NEXT_PUBLIC_DEV_MOCK_TOUR === 'true'
+    ? [
+        { id: 'mock-scene-1', externalSceneId: 'scene-001', panoramaUrl: '', thumbnailUrl: null, label: 'Store Entrance', displayOrder: 0, floor: 0,
+          shelves: [{ id: 'sh-1', label: 'Beverages', yaw: '-55', pitch: '-8', shelfImageUrl: null, displayOrder: 0 }, { id: 'sh-2', label: 'Snacks', yaw: '60', pitch: '-6', shelfImageUrl: null, displayOrder: 1 }, { id: 'sh-3', label: 'Promotions', yaw: '-5', pitch: '5', shelfImageUrl: null, displayOrder: 2 }] },
+        { id: 'mock-scene-2', externalSceneId: 'scene-002', panoramaUrl: '', thumbnailUrl: null, label: 'Main Aisle',     displayOrder: 1, floor: 0,
+          shelves: [{ id: 'sh-4', label: 'Dairy', yaw: '-90', pitch: '-7', shelfImageUrl: null, displayOrder: 0 }, { id: 'sh-5', label: 'Frozen Foods', yaw: '90', pitch: '-7', shelfImageUrl: null, displayOrder: 1 }, { id: 'sh-6', label: 'Bakery', yaw: '155', pitch: '-10', shelfImageUrl: null, displayOrder: 2 }, { id: 'sh-7', label: 'Deli Counter', yaw: '-150', pitch: '-5', shelfImageUrl: null, displayOrder: 3 }] },
+        { id: 'mock-scene-3', externalSceneId: 'scene-003', panoramaUrl: '', thumbnailUrl: null, label: 'Checkout Area', displayOrder: 2, floor: 0,
+          shelves: [{ id: 'sh-8', label: 'Checkout Counter', yaw: '20', pitch: '-5', shelfImageUrl: null, displayOrder: 0 }, { id: 'sh-9', label: 'Impulse Buys', yaw: '-30', pitch: '-8', shelfImageUrl: null, displayOrder: 1 }, { id: 'sh-10', label: 'Customer Service', yaw: '170', pitch: '-4', shelfImageUrl: null, displayOrder: 2 }] },
+      ]
+    : [];
 
 const TOUR_STATUS_LABELS: Record<string, string> = {
   processing: 'Processing',
@@ -124,7 +137,6 @@ export default function StoreDetail({ id }: StoreDetailProps) {
   const [empPage, setEmpPage] = useState(1);
   const [empSearch, setEmpSearch] = useState('');
   const [empSearchInput, setEmpSearchInput] = useState('');
-  const [tourViewerOpen, setTourViewerOpen] = useState(false);
 
   const { isLoaded: mapsLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
@@ -468,10 +480,27 @@ export default function StoreDetail({ id }: StoreDetailProps) {
                       size="sm"
                       variant="outline"
                       className="w-full text-xs"
-                      onClick={() => setTourViewerOpen(true)}
+                      onClick={() => router.push(`/dashboard/stores/${id}/tour`)}
                     >
                       <Eye className="mr-1 h-3 w-3" />
                       View Tour
+                    </Button>
+                  </div>
+                </div>
+              ) : DEV_MOCK_SCENES.length > 0 ? (
+                <div className="space-y-0">
+                  <DetailRow label="Status" value="Active (mock)" />
+                  <DetailRow label="Scenes" value={String(DEV_MOCK_SCENES.length)} />
+                  <DetailRow label="Shelves" value={String(DEV_MOCK_SCENES.reduce((n, s) => n + s.shelves.length, 0))} />
+                  <div className="pt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs"
+                      onClick={() => router.push(`/dashboard/stores/${id}/tour`)}
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
+                      View Mock Tour
                     </Button>
                   </div>
                 </div>
@@ -583,14 +612,6 @@ export default function StoreDetail({ id }: StoreDetailProps) {
             </div>
           )}
         </div>
-      )}
-      {store && (
-        <TourViewerModal
-          storeId={id}
-          storeName={store.name}
-          open={tourViewerOpen}
-          onClose={() => setTourViewerOpen(false)}
-        />
       )}
     </section>
   );

@@ -15,6 +15,7 @@ export interface TourViewerModalProps {
   storeName: string;
   open: boolean;
   onClose: () => void;
+  mockScenes?: TourScene[];
 }
 
 export default function TourViewerModal({
@@ -22,12 +23,13 @@ export default function TourViewerModal({
   storeName,
   open,
   onClose,
+  mockScenes,
 }: TourViewerModalProps) {
   const [sceneIndex, setSceneIndex] = useState(0);
 
-  const { data, isLoading, isError, refetch } = useActiveStoreTourQuery(storeId, { enabled: open });
+  const { data, isLoading, isError, refetch } = useActiveStoreTourQuery(storeId, { enabled: open && !mockScenes });
   const tour = data?.data ?? null;
-  const scenes: TourScene[] = tour?.scenes ?? [];
+  const scenes: TourScene[] = mockScenes ?? tour?.scenes ?? [];
   const currentScene: TourScene | null = scenes[sceneIndex] ?? null;
 
   useEffect(() => {
@@ -35,14 +37,14 @@ export default function TourViewerModal({
   }, [open, storeId]);
 
   function renderBody() {
-    if (isLoading) {
+    if (isLoading && !mockScenes) {
       return (
         <div className="flex h-full items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
         </div>
       );
     }
-    if (isError) {
+    if (isError && !mockScenes) {
       return (
         <div className="flex h-full flex-col items-center justify-center gap-3">
           <p className="text-sm text-white/60">Failed to load tour.</p>
@@ -55,7 +57,7 @@ export default function TourViewerModal({
         </div>
       );
     }
-    if (!tour) {
+    if (!tour && scenes.length === 0) {
       return (
         <div className="flex h-full items-center justify-center">
           <p className="text-sm text-white/50">No tour available for this store yet.</p>

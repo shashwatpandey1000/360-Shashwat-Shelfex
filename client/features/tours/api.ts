@@ -1,5 +1,12 @@
 import apiClient from '@/lib/api/client';
 
+export interface SceneLink {
+  targetSceneId: string;
+  yaw: number;
+  pitch?: number;
+  label?: string;
+}
+
 export interface TourScene {
   id: string;
   externalSceneId: string;
@@ -9,6 +16,7 @@ export interface TourScene {
   displayOrder: number;
   floor: number;
   shelves: TourShelf[];
+  links?: SceneLink[];
 }
 
 export interface TourShelf {

@@ -81,6 +81,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   schedule: 'Schedule',
   settings: 'Settings',
   zones: 'Zones',
+  tour: 'Tour',
 };
 
 const DashboardBreadcrumb = () => {
